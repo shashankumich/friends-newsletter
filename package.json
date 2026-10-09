@@ -1,0 +1,11 @@
+{
+  "name": "friends-newsletter",
+  "private": true,
+  "type": "module",
+  "description": "Postcards: a seasonal newsletter for friends, with a no-code Studio editor.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs"
+  },
+  "engines": { "node": ">=20" }
+}

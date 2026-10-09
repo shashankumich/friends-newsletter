@@ -1,0 +1,10 @@
+{
+  "title": "Postcards",
+  "author": "Shashank",
+  "description": "A seasonal letter to friends around the world.",
+  "baseUrl": "",
+  "reply": {
+    "whatsapp": "",
+    "email": ""
+  }
+}
