@@ -9,10 +9,14 @@ import { waLink, mailLink, phoneDigits } from './links.js';
 // Some mail apps silently cut mailto links much past this length.
 export const MAILTO_LIMIT = 1900;
 
-export function issueUrl(siteUrl, n, to = '') {
-  const base = `${String(siteUrl || '').replace(/\/+$/, '')}/issues/${pad2(n)}/`;
+// `slug` picks a friend group's own copy of the issue.
+export function issueUrl(siteUrl, n, to = '', slug = '') {
+  const base = `${String(siteUrl || '').replace(/\/+$/, '')}/issues/${pad2(n)}/${slug ? `${slug}/` : ''}`;
   return to ? `${base}?to=${encodeURIComponent(to)}` : base;
 }
+
+// A group's permanent link: always the newest issue. Good for pinning in the group chat.
+export const groupLink = (siteUrl, slug) => `${String(siteUrl || '').replace(/\/+$/, '')}/g/${slug}/`;
 
 const headline = issue => `${issue.cover?.greeting || 'Greetings from'} ${issue.cover?.place || ''}`.trim();
 const label = (site, issue) => `${site.title || 'Postcards'} No. ${pad2(issue.number)}`;
@@ -70,10 +74,11 @@ export function bccMailto({ emails, site, issue, url, self = '' }) {
 }
 
 // contacts: { [friendName]: { email, whatsapp } }, kept only in the browser.
-export function personalLinks({ friends, contacts = {}, siteUrl, site, issue }) {
+// `slug` points the links at one friend group's copy of the issue.
+export function personalLinks({ friends, contacts = {}, siteUrl, site, issue, slug = '' }) {
   return friends.map(f => {
     const c = contacts[f.name] || {};
-    const url = issueUrl(siteUrl, issue.number, f.name);
+    const url = issueUrl(siteUrl, issue.number, f.name, slug);
     const { subject, text } = emailParts({ site, issue, url, name: f.name });
     return {
       name: f.name,

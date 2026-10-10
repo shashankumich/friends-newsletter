@@ -4,6 +4,7 @@
 //   /issues/NN/     every published issue, with its media
 //   /archive/       all issues, newest first
 //   /studio/        the no-code editor
+//   For each friend group: /issues/NN/<slug>/, /archive/<slug>/ and /g/<slug>/ (always the latest)
 // Usage: node scripts/build.mjs [--out dist] [--content content] [--site-url https://…]
 
 import { readFile, writeFile, mkdir, rm, cp, readdir } from 'node:fs/promises';
@@ -11,8 +12,8 @@ import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { pad2, validateIssue, momentKind } from '../src/schema.js';
-import { renderIssuePage, renderArchivePage, renderNoticePage, FONTS_URL, absUrl } from '../src/render.js';
+import { pad2, validateIssue, validateGroups, momentKind } from '../src/schema.js';
+import { renderIssuePage, renderArchivePage, renderNoticePage, forAudience, FONTS_URL, absUrl } from '../src/render.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'src');
@@ -29,6 +30,8 @@ export async function loadContent(contentDir) {
   const site = await readJSON(path.join(contentDir, 'site.json'));
   const friendsFile = path.join(contentDir, 'friends.json');
   const friends = existsSync(friendsFile) ? await readJSON(friendsFile) : [];
+  const groupsFile = path.join(contentDir, 'groups.json');
+  const groups = existsSync(groupsFile) ? await readJSON(groupsFile) : [];
   const issuesDir = path.join(contentDir, 'issues');
   const names = existsSync(issuesDir) ? (await readdir(issuesDir)).filter(n => /^\d+$/.test(n)).sort() : [];
   const issues = [];
@@ -36,7 +39,7 @@ export async function loadContent(contentDir) {
     const file = path.join(issuesDir, dir, 'issue.json');
     if (existsSync(file)) issues.push({ dir, issue: await readJSON(file) });
   }
-  return { site, friends, issues };
+  return { site, friends, groups, issues };
 }
 
 // Media an issue points at, as paths relative to its folder.
@@ -49,8 +52,8 @@ export function mediaRefs(issue) {
   return refs.filter(r => r && !/^(https?:|data:)/.test(r));
 }
 
-function check({ friends, issues }, contentDir) {
-  const problems = [];
+function check({ friends, groups, issues }, contentDir) {
+  const problems = [...validateGroups(groups, friends)];
   const seen = new Map();
   for (const { dir, issue } of issues) {
     const where = `issues/${dir}/issue.json`;
@@ -92,7 +95,7 @@ export async function build({
   log = console.log,
 } = {}) {
   const content = await loadContent(contentDir);
-  const { site, friends } = content;
+  const { site, friends, groups } = content;
   const problems = check(content, contentDir);
   if (problems.length) throw new Error(`Build stopped. Fix these and try again:\n  - ${problems.join('\n  - ')}`);
 
@@ -103,23 +106,31 @@ export async function build({
   await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
   const v = await writeAssets(outDir);
-  const ctx = { site, friends, issues: published, siteUrl, v };
+  const shared = { site, friends, groups, issues: published, siteUrl, v };
+  const ctx = forAudience(shared);
+  const write = async (rel, html) => {
+    await mkdir(path.dirname(path.join(outDir, rel)), { recursive: true });
+    await writeFile(path.join(outDir, rel), html);
+  };
+  const comingSoon = c => renderNoticePage(c, { title: 'Postcards', heading: 'The first postcard is on its way.', text: `${site.author || 'Someone'} is writing it now. Check back soon.` });
 
   for (const issue of published) {
-    const dir = path.join(outDir, 'issues', pad2(issue.number));
-    await mkdir(dir, { recursive: true });
-    await writeFile(path.join(dir, 'index.html'), renderIssuePage(issue, { ...ctx, root: '../../' }));
+    const dir = `issues/${pad2(issue.number)}`;
+    await write(`${dir}/index.html`, renderIssuePage(issue, { ...ctx, root: '../../' }));
+    for (const g of groups) await write(`${dir}/${g.slug}/index.html`, renderIssuePage(issue, { ...forAudience(shared, g), root: '../../../' }));
     const media = path.join(contentDir, 'issues', pad2(issue.number), 'media');
-    if (existsSync(media)) await cp(media, path.join(dir, 'media'), { recursive: true });
+    if (existsSync(media)) await cp(media, path.join(outDir, dir, 'media'), { recursive: true });
   }
 
   const latest = published.at(-1);
-  await writeFile(path.join(outDir, 'index.html'), latest
-    ? renderIssuePage(latest, { ...ctx, root: '' })
-    : renderNoticePage({ ...ctx, root: '' }, { title: 'Postcards', heading: 'The first postcard is on its way.', text: `${site.author || 'Someone'} is writing it now. Check back soon.` }));
-
-  await mkdir(path.join(outDir, 'archive'), { recursive: true });
-  await writeFile(path.join(outDir, 'archive', 'index.html'), renderArchivePage({ ...ctx, root: '../' }));
+  await write('index.html', latest ? renderIssuePage(latest, { ...ctx, root: '' }) : comingSoon({ ...ctx, root: '' }));
+  await write('archive/index.html', renderArchivePage({ ...ctx, root: '../' }));
+  for (const g of groups) {
+    const gc = forAudience(shared, g);
+    await write(`archive/${g.slug}/index.html`, renderArchivePage({ ...gc, root: '../../' }));
+    // A link to pin in the group chat: always the newest issue.
+    await write(`g/${g.slug}/index.html`, latest ? renderIssuePage(latest, { ...gc, root: '../../' }) : comingSoon({ ...gc, root: '../../' }));
+  }
 
   await mkdir(path.join(outDir, 'issues'), { recursive: true });
   await writeFile(path.join(outDir, 'issues', 'index.html'), '<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><meta http-equiv="refresh" content="0; url=../archive/"><title>Archive</title><a href="../archive/">All postcards</a>\n');
@@ -147,7 +158,7 @@ export async function build({
   }, null, 2)}\n`);
 
   const drafts = all.filter(i => i.status !== 'published').map(i => i.number);
-  log(`Built ${published.length} published issue${published.length === 1 ? '' : 's'}${drafts.length ? ` (skipped draft${drafts.length === 1 ? '' : 's'} ${drafts.map(pad2).join(', ')})` : ''} into ${path.relative(process.cwd(), outDir) || '.'}/${siteUrl ? ` for ${siteUrl}` : ''}`);
+  log(`Built ${published.length} published issue${published.length === 1 ? '' : 's'}${groups.length ? ` for ${groups.length + 1} audiences` : ''}${drafts.length ? ` (skipped draft${drafts.length === 1 ? '' : 's'} ${drafts.map(pad2).join(', ')})` : ''} into ${path.relative(process.cwd(), outDir) || '.'}/${siteUrl ? ` for ${siteUrl}` : ''}`);
   return { published: published.map(i => i.number), drafts, outDir, v, siteUrl };
 }
 

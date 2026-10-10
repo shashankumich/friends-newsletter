@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { esc, inline, paras, palette, contrast, renderIssuePage, renderIssueBody, renderArchivePage, pageData, shownSections, mediaUrl, fmtCoords } from '../src/render.js';
+import { esc, inline, paras, palette, contrast, renderIssuePage, renderIssueBody, renderArchivePage, pageData, shownSections, mediaUrl, fmtCoords, coverFontSize } from '../src/render.js';
 
 const read = p => JSON.parse(readFileSync(new URL(`../content/${p}`, import.meta.url)));
 const site = { ...read('site.json'), reply: { whatsapp: '+44 7700 900123', email: 'me@example.com' } };
@@ -124,6 +124,33 @@ test('the moment renders as a video, a YouTube facade or a photo', () => {
   const photo = sample();
   Object.assign(photo.moment, { kind: 'photo', photo: 'media/roll-1.webp', w: 900, h: 1200 });
   assert.match(renderIssueBody(photo, ctx()), /class="film-photo" src="\.\.\/\.\.\/issues\/01\/media\/roll-1\.webp"/);
+});
+
+test('the cover word is sized for one, two and three lines and the browser takes the biggest', () => {
+  assert.equal(coverFontSize('Lisbon'), 'max(40px, min(30.66cqi, 56cqb))');
+  const nyc = coverFontSize('New York City');
+  assert.equal((nyc.match(/min\(/g) || []).length, 3);
+  // Wide letters need more room than narrow ones.
+  const size = s => parseFloat(/min\(([\d.]+)cqi/.exec(coverFontSize(s))[1]);
+  assert.ok(size('WWWW') < size('IIII'));
+  assert.match(renderIssueBody(sample(), ctx()), /class="cover-word" style="font-size:max\(40px, min\(30\.66cqi, 56cqb\)\)"/);
+});
+
+test('the opening quote comes before the cover, one sentence per line, with the reply in hand', () => {
+  const i = sample();
+  assert.doesNotMatch(renderIssueBody(i, ctx()), /data-pc-opening/); // not in the sample
+  i.opening = { on: true, quote: '""It goes, kids. You lose touch. So *you do something about it.*"', source: 'Ted Mosby', note: 'So here I am.' };
+  const html = renderIssueBody(i, ctx());
+  assert.ok(html.indexOf('data-pc-opening') < html.indexOf('class="cover wrap"'));
+  assert.equal((html.match(/class="op-line"/g) || []).length, 3);
+  assert.match(html, /style="--n:3"/);
+  assert.match(html, /<span class="op-line" style="--i:0">It goes, kids\.<\/span>/); // stray quote marks trimmed
+  assert.match(html, /<em>you do something about it\.<\/em>/);
+  assert.match(html, /<figcaption class="op-src">Ted Mosby<\/figcaption>/);
+  assert.match(html, /<p class="op-note"><span class="hand">So here I am\.<\/span>/);
+  assert.doesNotMatch(html, /href="#opening"/); // not a numbered section
+  i.opening.on = false;
+  assert.doesNotMatch(renderIssueBody(i, ctx()), /data-pc-opening/);
 });
 
 test('coordinates read like a postmark', () => {

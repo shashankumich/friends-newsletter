@@ -4,6 +4,8 @@
 
 Each issue is a page on a static site (GitHub Pages) that mixes postcard, editorial, scrapbook and film styles: a large-letter "Greetings from" cover, a letter addressed to each friend by name, a film-strip video, taped polaroids, a customs-form "Currently", a boarding-pass "Next stop", a live "Who's awake" world map, and the back of a postcard to reply on, by WhatsApp or email, in one tap.
 
+Friends can be split into **groups** (college, work, family…): each group gets its own copy of every issue, with its own greeting and P.S., and only its own friends on the map.
+
 Issues are written in the **Studio** at `/studio/`, a no-code editor with live preview. It shrinks photos in the browser, saves each change as one commit, follows the deploy until the issue is live, and prepares the WhatsApp message, the email and a personal link for every friend.
 
 - [`docs/SETUP.md`](docs/SETUP.md): one-time setup, making and sending an issue, privacy, local development, troubleshooting

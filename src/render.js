@@ -1,7 +1,7 @@
 // Turns content/issues/NN/issue.json into HTML. Pure string functions with no DOM, so the
 // same module runs in the Node build and in the Studio's live preview.
 
-import { SECTIONS, isShown, pad2, momentKind, youtubeId, nextSeasons, DEFAULT_STAMPS, DEFAULT_COLOR } from './schema.js';
+import { SECTIONS, isShown, pad2, momentKind, youtubeId, nextSeasons, DEFAULT_STAMPS, DEFAULT_COLOR, audienceFriends, scopeIssue } from './schema.js';
 
 export const FONTS_URL = 'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Nanum+Pen+Script&display=swap';
 
@@ -88,6 +88,26 @@ export function colorVars(hex) {
 /* ---------- urls ---------- */
 
 export const issueDir = n => `issues/${pad2(n)}/`;
+// An issue's page for one audience: the shared page, or a friend group's own copy.
+export const audiencePath = (n, slug = '') => `${issueDir(n)}${slug ? `${slug}/` : ''}`;
+
+// Where a page's links go. Group pages link to the group's own copies, never to the shared ones.
+function links(ctx) {
+  const r = ctx.root || '';
+  const slug = ctx.group?.slug || '';
+  return {
+    home: slug ? `${r}g/${slug}/` : r || './',
+    issue: n => `${r}${audiencePath(n, slug)}`,
+    archive: slug ? `${r}archive/${slug}/` : `${r}archive/`,
+  };
+}
+
+// A render context for one audience: the shared pages (no group) or one friend group, with that
+// audience's friends only. The friend count in the intro still covers everyone.
+export function forAudience(ctx, group = null) {
+  const all = ctx.allFriends || ctx.friends || [];
+  return { ...ctx, group, allFriends: all, friends: audienceFriends(all, ctx.groups || [], group?.id || '') };
+}
 
 export function mediaUrl(issue, src, ctx = {}) {
   if (!src) return '';
@@ -187,9 +207,9 @@ const airmail = () => '<div class="airmail" aria-hidden="true"></div>';
 function masthead(ctx, issue) {
   const s = ctx.site || {};
   return `<header class="mast wrap">
-<a class="brand" href="${ctx.root || './'}"><span class="brand-word">${esc(s.title || 'Postcards')}</span><span class="brand-from">from ${esc(s.author || 'a friend')}</span></a>
+<a class="brand" href="${links(ctx).home}"><span class="brand-word">${esc(s.title || 'Postcards')}</span><span class="brand-from">from ${esc(s.author || 'a friend')}</span></a>
 ${issue ? `<p class="mast-meta"><span>No.&nbsp;${pad2(issue.number)}</span><span>${esc(issue.season)}</span><span class="mast-date">${esc(fmtDate(issue.date))}</span></p>` : ''}
-<nav class="mast-nav" aria-label="Site"><a href="${ctx.root || ''}archive/">Archive</a>${issue ? '<a class="mast-cta" href="#write-back">Write back</a>' : ''}</nav>
+<nav class="mast-nav" aria-label="Site"><a href="${links(ctx).archive}">Archive</a>${issue ? '<a class="mast-cta" href="#write-back">Write back</a>' : ''}</nav>
 </header>`;
 }
 
@@ -207,20 +227,72 @@ ${body}
 
 /* ---------- cover + intro ---------- */
 
+// Advance widths, in em, of the cover lettering (Archivo 900 at its narrowest width, uppercase),
+// measured in the browser. They let the renderer size any place name to fill the card.
+const CAP_W = { A: .53, B: .5, C: .51, D: .51, E: .46, F: .4, G: .54, H: .51, I: .26, J: .45, K: .51, L: .43, M: .71, N: .52, O: .55, P: .49, Q: .55, R: .51, S: .47, T: .48, U: .5, V: .49, W: .73, X: .5, Y: .48, Z: .48, ' ': .11, '-': .24, '.': .22, "'": .21, '&': .57 };
+const capsWidth = s => [...String(s).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')]
+  .reduce((t, c) => t + (CAP_W[c] ?? (/\d/.test(c) ? .44 : .5)), 0);
+
+// The narrowest the widest line can be when `words` are split into `k` lines.
+function widestLine(words, k) {
+  let best = Infinity;
+  const line = (a, b) => capsWidth(words.slice(a, b).join(' '));
+  const walk = (start, left, worst) => {
+    if (left === 1) { best = Math.min(best, Math.max(worst, line(start, words.length))); return; }
+    for (let end = start + 1; end <= words.length - left + 1; end++) walk(end, left - 1, Math.max(worst, line(start, end)));
+  };
+  walk(0, k, 0);
+  return best;
+}
+
+// A font-size that fills the postcard: for one, two and three lines, the largest size that fits
+// both the card's width (cqi) and its height (cqb); the browser takes the biggest. Wrapping then
+// falls into that many lines on its own, so a tall phone card and a wide desktop card each get
+// their best layout ("NEW / YORK / CITY" on a phone, "NEW YORK / CITY" on a laptop).
+export function coverFontSize(place) {
+  const words = String(place).trim().split(/\s+/).filter(Boolean);
+  const r2 = n => Math.round(n * 100) / 100;
+  const terms = [];
+  for (let k = 1; k <= Math.min(words.length, 3); k++) {
+    terms.push(`min(${r2(88 / (widestLine(words, k) + 0.14))}cqi, ${r2(56 / k)}cqb)`);
+  }
+  return `max(40px, ${terms.join(', ')})`;
+}
+
 function cover(issue, ctx) {
   const c = issue.cover || {};
   const src = mediaUrl(issue, c.photo, ctx);
   const place = String(c.place || '').trim() || 'Somewhere';
-  const longest = Math.max(4, ...place.split(/\s+/).map(w => [...w].length));
-  const words = place.split(/\s+/).length;
   const coords = fmtCoords(c.lat, c.lon);
   return `<section class="cover wrap" aria-label="Cover">
 <div class="cover-card${src ? '' : ' no-photo'}">
 ${src ? `<img class="cover-photo" src="${esc(src)}" alt="${esc(c.alt || '')}"${c.w && c.h ? ` width="${c.w}" height="${c.h}"` : ''} fetchpriority="high" decoding="async">` : ''}
-<h1 class="cover-h"><span class="cover-greet">${esc(c.greeting || 'Greetings from')}</span> <span class="cover-word" style="--n:${longest};--lines:${Math.min(words, 3)}"><span class="cw cw-shadow" aria-hidden="true">${esc(place)}</span><span class="cw cw-face"${src ? ` style="background-image:${esc(cssUrl(src))}"` : ''}>${esc(place)}</span></span></h1>
+<h1 class="cover-h"><span class="cover-greet">${esc(c.greeting || 'Greetings from')}</span> <span class="cover-word" style="font-size:${coverFontSize(place)}"><span class="cw cw-shadow" aria-hidden="true">${esc(place)}</span><span class="cw cw-face"${src ? ` style="background-image:${esc(cssUrl(src))}"` : ''}>${esc(place)}</span></span></h1>
 <p class="cover-loc">${coords ? `<span>${coords}</span>` : ''}${c.country ? `<span>${esc(c.country)}</span>` : ''}<span>No. ${pad2(issue.number)}</span></p>
 </div>
 <div class="franking" aria-hidden="true">${stamp(issue, ctx, 'franking-stamp')}${postmark(issue)}</div>
+</section>`;
+}
+
+// The opening quote: a dark band before the cover, like the cold open of a film. Each sentence
+// fades in on its own, the *emphasised* words are underlined last, and the author answers in hand.
+export function quoteSentences(text) {
+  return (String(text).match(/[^.!?…]+(?:[.!?…]+["”’)*_]*\s*|$)/g) || []).map(t => t.trim()).filter(Boolean);
+}
+
+function opening(issue) {
+  const o = issue.opening || {};
+  const text = String(o.quote || '').replace(/^[\s"“”„]+|[\s"“”]+$/g, '').replace(/\s*\n+\s*/g, ' ');
+  if (o.on === false || !text) return '';
+  const lines = quoteSentences(text);
+  return `<section class="op" aria-label="Opening quote" data-pc-opening style="--n:${lines.length}">
+<div class="wrap op-in">
+<figure class="op-fig">
+<blockquote class="op-quote"><p>${lines.map((l, i) => `<span class="op-line" style="--i:${i}">${inline(l)}</span>`).join(' ')}</p></blockquote>
+${o.source ? `<figcaption class="op-src">${esc(o.source)}</figcaption>` : ''}
+</figure>
+${o.note ? `<p class="op-note"><span class="hand">${inline(o.note)}</span><svg class="op-arrow" viewBox="0 0 120 96" aria-hidden="true"><path d="M10 12c30-8 78 2 88 58" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M82 58l16 16 10-22" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></p>` : ''}
+</div>
 </section>`;
 }
 
@@ -228,7 +300,7 @@ function intro(issue, ctx, shown) {
   const c = issue.cover || {};
   const toc = shown.map((s, i) => `<li><a href="#${s.id}"><span class="toc-no">${pad2(i + 1)}</span><span class="toc-name">${esc(s.label)}</span></a></li>`).join('');
   return `<section class="intro wrap" aria-label="Introduction">
-<div class="intro-main">${c.dek ? `<p class="dek">${inline(c.dek)}</p>` : ''}<p class="intro-reach">${reachLine(ctx.friends)}</p></div>
+<div class="intro-main">${c.dek ? `<p class="dek">${inline(c.dek)}</p>` : ''}<p class="intro-reach">${reachLine(ctx.allFriends || ctx.friends)}</p></div>
 <nav class="toc" aria-label="In this issue"><p class="toc-h">In this issue</p><ol>${toc}</ol></nav>
 </section>`;
 }
@@ -239,13 +311,15 @@ const BODY = {
   letter(issue, ctx) {
     const l = issue.letter || {};
     const where = issue.cover?.place;
+    const dearTo = ctx.group?.salutation || 'friend';
     return {
       kick: 'The letter', meta: where ? esc(where) : '', title: 'The letter', titleHidden: true,
       body: `<article class="letter">
 <p class="letter-date">${[where, fmtDate(issue.date)].filter(Boolean).map(esc).join(' · ')}</p>
-<p class="letter-dear hand"><span data-pc-dear data-greeting="${esc(l.greeting || 'Dear')}">${esc(l.greeting || 'Dear')} friend,</span></p>
+<p class="letter-dear hand"><span data-pc-dear data-greeting="${esc(l.greeting || 'Dear')}" data-fallback="${esc(dearTo)}">${esc(l.greeting || 'Dear')} ${esc(dearTo)},</span></p>
 <div class="prose letter-body">${paras(l.body)}</div>
 <p class="letter-sign"><span class="letter-signoff">${esc(l.signoff || 'Love,')}</span><span class="hand letter-name">${esc(ctx.site?.author || '')}</span></p>
+${l.ps ? `<aside class="letter-ps" aria-label="P.S."><span class="tape" aria-hidden="true"></span><p class="hand"><b>P.S.</b> ${inline(l.ps).replace(/\n/g, '<br>')}</p></aside>` : ''}
 </article>`,
     };
   },
@@ -441,12 +515,12 @@ function album(issue, ctx) {
   const slots = 4 - (list.length % 4 || 4) || 4;
   const upcoming = nextSeasons(latest.season, slots);
   while (upcoming.length < slots) upcoming.push('Coming soon');
-  const href = i => i.number === issue.number && ctx.isIssuePage ? '#top' : `${ctx.root || ''}${issueDir(i.number)}`;
+  const href = i => i.number === issue.number && ctx.isIssuePage ? '#top' : links(ctx).issue(i.number);
   return `<section class="album" id="album" aria-labelledby="h-album">
 <div class="wrap">
 <div class="album-head"><p class="rail-kick">Stamp album</p><h2 class="album-title" id="h-album">One stamp per issue</h2><p class="album-sub">Every season adds a stamp. Give it a few years and this becomes a whole album of us.</p></div>
 <ol class="stock">${list.map(i => `<li class="stock-cell${i.number === issue.number ? ' is-current' : ''}"><a href="${href(i)}"${i.number === issue.number ? ' aria-current="page"' : ''}>${stamp(i, ctx)}<span class="stock-lbl">No. ${pad2(i.number)}<br>${esc(i.season)}</span></a></li>`).join('')}${upcoming.map((s, k) => `<li class="stock-cell is-empty"><span class="slot" aria-hidden="true">${pad2(latest.number + k + 1)}</span><span class="stock-lbl">${esc(s.replace(/\s\d{4}$/, ''))}<span class="sr-only"> (coming)</span></span></li>`).join('')}</ol>
-<p class="album-more"><a href="${ctx.root || ''}archive/">Every postcard so far ${ICON.arrow}</a></p>
+<p class="album-more"><a href="${links(ctx).archive}">Every postcard so far ${ICON.arrow}</a></p>
 </div>
 </section>`;
 }
@@ -454,7 +528,7 @@ function album(issue, ctx) {
 function colophon(ctx, issue) {
   const place = issue?.cover?.place;
   return `<footer class="colo wrap">
-<p class="colo-big">${reachLine(ctx.friends)}. Replies go to ${esc(ctx.site?.author || 'me')} and nobody else.</p>
+<p class="colo-big">${reachLine(ctx.allFriends || ctx.friends)}. Replies go to ${esc(ctx.site?.author || 'me')} and nobody else.</p>
 <p>If you'd rather not get these, just say so. No hard feelings.</p>
 <p class="colo-type">Set in Bodoni Moda, Archivo, IBM Plex Mono and Nanum Pen Script.${place ? ` Posted from ${esc(place)}${issue.date ? `, ${esc(fmtDate(issue.date))}` : ''}.` : ''}</p>
 </footer>
@@ -485,7 +559,8 @@ export function pageData(issue, ctx) {
 const jsonScript = (id, data) => `<script type="application/json" id="${id}">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 
 // Everything inside <body> for one issue. The Studio preview swaps this in place.
-export function renderIssueBody(issue, ctx) {
+export function renderIssueBody(fullIssue, ctx) {
+  const issue = scopeIssue(fullIssue, ctx.group?.id || '');
   const friends = ctx.friends || [];
   const shown = shownSections(issue, friends);
   const body = shown.map((def, i) => {
@@ -497,6 +572,7 @@ ${issue.sample ? '<p class="sample-note"><span>Sample issue</span> Made-up frien
 <div id="top"></div>
 ${masthead(ctx, issue)}
 <main>
+${opening(issue)}
 ${cover(issue, ctx)}
 ${intro(issue, ctx, shown)}
 ${body}
@@ -556,7 +632,7 @@ export function issueTitle(issue, site = {}) {
 
 export function renderIssuePage(issue, ctx) {
   const dir = issueDir(issue.number);
-  const canonical = absUrl(ctx.siteUrl, dir);
+  const canonical = absUrl(ctx.siteUrl, audiencePath(issue.number, ctx.group?.slug));
   const img = issue.card || issue.cover?.photo;
   const isCard = !!issue.card;
   const description = issue.cover?.dek || `Postcard No. ${pad2(issue.number)} from ${ctx.site?.author || 'a friend'}.`;
@@ -585,7 +661,7 @@ export function renderArchivePage(ctx) {
 ${masthead(ctx, null)}
 <main class="archive wrap">
 <header class="arch-head"><p class="rail-kick">The archive</p><h1 class="arch-title">Every postcard so far</h1><p class="arch-sub">${list.length ? `${plural(list.length, 'issue', 'issues')}, newest first.` : 'Nothing posted yet. The first postcard is on its way.'}</p></header>
-<ol class="arch-list">${list.map(i => `<li style="${colorVars(i.color)}"><a class="arch-item" href="${ctx.root || ''}${issueDir(i.number)}">
+<ol class="arch-list">${list.map(i => `<li style="${colorVars(i.color)}"><a class="arch-item" href="${links(ctx).issue(i.number)}">
 ${stamp(i, ctx, 'arch-stamp')}
 <span class="arch-text"><span class="arch-meta">No. ${pad2(i.number)} · ${esc(i.season)}</span><span class="arch-place"><em>${esc(i.cover?.greeting || 'Greetings from')}</em> ${esc(i.cover?.place || '')}</span>${i.cover?.dek ? `<span class="arch-dek">${inline(i.cover.dek)}</span>` : ''}</span>
 <span class="arch-go" aria-hidden="true">${ICON.arrow}</span></a></li>`).join('')}</ol>
@@ -594,7 +670,7 @@ ${colophon(ctx, null)}`;
   return renderPage({
     ctx, title: `Archive · ${ctx.site?.title || 'Postcards'} from ${ctx.site?.author || 'a friend'}`,
     description: ctx.site?.description || '', color: latest?.color || DEFAULT_COLOR,
-    canonical: absUrl(ctx.siteUrl, 'archive/'), bodyClass: 'is-archive', body,
+    canonical: absUrl(ctx.siteUrl, ctx.group ? `archive/${ctx.group.slug}/` : 'archive/'), bodyClass: 'is-archive', body,
   });
 }
 

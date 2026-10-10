@@ -3,11 +3,11 @@
 // change as one commit, follows the deploy until the issue is live, and helps send it out.
 // Friends' email addresses and WhatsApp numbers stay in this browser and are never committed.
 
-import { EDITOR, SWATCHES, blankIssue, validateIssue, getPath, setPath, pad2, todayISO, mediaPaths, isShown, momentKind } from './schema.js';
-import { renderIssueBody, colorVars, esc, fmtCoords } from './render.js';
+import { EDITOR, SWATCHES, blankIssue, validateIssue, getPath, setPath, pad2, todayISO, mediaPaths, isShown, momentKind, newGroup, audienceFriends } from './schema.js';
+import { renderIssueBody, colorVars, esc, fmtCoords, forAudience } from './render.js';
 import { GitHub, waitForDeploy } from './github.js';
 import { compressImage, videoInfo, socialCard } from './media.js';
-import { issueUrl, whatsappText, emailParts, bccMailto, personalLinks } from './share.js';
+import { issueUrl, groupLink, whatsappText, emailParts, bccMailto, personalLinks } from './share.js';
 import { waLink } from './links.js';
 
 const root = document.getElementById('studio');
@@ -82,8 +82,8 @@ const idb = (() => {
 const S = {
   gh: null, api: GITHUB_API, mock: false, repo: '', branch: 'main', user: null,
   base: null, // { sha, tree, files: Map(path -> { sha, size }) } as last read from GitHub
-  site: null, friends: [], issues: new Map(),
-  orig: { site: '', friends: '', issues: new Map() },
+  site: null, friends: [], groups: [], issues: new Map(),
+  orig: { site: '', friends: '', groups: '', issues: new Map() },
   current: 0,
   removed: new Set(), // draft issue numbers deleted locally
   pending: new Map(), // repo path -> { blob, url } for new media
@@ -201,7 +201,7 @@ function normalize(issue) {
 }
 
 function snapshot() {
-  return { site: json(S.site), friends: json(S.friends), issues: new Map([...S.issues].map(([n, i]) => [n, json(i)])) };
+  return { site: json(S.site), friends: json(S.friends), groups: json(S.groups), issues: new Map([...S.issues].map(([n, i]) => [n, json(i)])) };
 }
 
 async function readBase() {
@@ -226,6 +226,7 @@ async function open(token, { check = false } = {}) {
   S.site = (await read('content/site.json')) || { title: 'Postcards', author: '', description: '', reply: {} };
   S.site.reply ||= { whatsapp: '', email: '' };
   S.friends = (await read('content/friends.json')) || [];
+  S.groups = (await read('content/groups.json')) || [];
   const paths = [...files.keys()].filter(p => /^content\/issues\/\d+\/issue\.json$/.test(p));
   const issues = (await Promise.all(paths.map(read))).filter(i => i && Number.isInteger(i.number));
   S.issues = new Map(issues.sort((a, b) => a.number - b.number).map(i => [i.number, normalize(i)]));
@@ -246,7 +247,7 @@ function persist() {
     if (!changes().length) return store.del(KEY.work());
     store.set(KEY.work(), {
       base: S.base.sha, at: Date.now(), current: S.current,
-      site: S.site, friends: S.friends, issues: [...S.issues.values()],
+      site: S.site, friends: S.friends, groups: S.groups, issues: [...S.issues.values()],
       removed: [...S.removed], deleted: [...S.deleted], pending: [...S.pending.keys()],
     });
   }, 400);
@@ -257,6 +258,7 @@ async function restoreWork() {
   if (!w) return;
   if (w.site) S.site = w.site;
   if (w.friends) S.friends = w.friends;
+  if (w.groups) S.groups = w.groups;
   for (const i of w.issues || []) S.issues.set(i.number, normalize(i));
   for (const n of w.removed || []) { S.issues.delete(n); S.removed.add(n); }
   for (const p of w.deleted || []) S.deleted.add(p);
@@ -278,6 +280,7 @@ function changes() {
   const add = (path, content, orig) => { if (content !== orig) out.set(path, { path, content }); };
   add('content/site.json', json(S.site), S.orig.site);
   add('content/friends.json', json(S.friends), S.orig.friends);
+  add('content/groups.json', json(S.groups), S.orig.groups);
   const refs = new Set();
   for (const [n, issue] of S.issues) {
     add(issueFile(n), json(issue), S.orig.issues.get(n));
@@ -299,6 +302,7 @@ function commitMessage(publishing) {
   for (const [n, issue] of S.issues) if (isDirtyIssue(n)) parts.push(`${issue.status === 'published' ? 'Edit' : 'Draft'} No. ${pad2(n)}`);
   for (const n of S.removed) parts.push(`Delete draft No. ${pad2(n)}`);
   if (json(S.friends) !== S.orig.friends) parts.push('Update friends');
+  if (json(S.groups) !== S.orig.groups) parts.push('Update groups');
   if (json(S.site) !== S.orig.site) parts.push('Update settings');
   return `${parts.join(', ') || 'Update content'}\n\nSaved from Postcards Studio.`;
 }
@@ -306,7 +310,7 @@ function commitMessage(publishing) {
 // Does saving these files change what friends see?
 function touchesLiveSite(files) {
   return files.some(f => {
-    if (f.path === 'content/site.json' || f.path === 'content/friends.json') return true;
+    if (['content/site.json', 'content/friends.json', 'content/groups.json'].includes(f.path)) return true;
     const m = /^content\/issues\/(\d+)\//.exec(f.path);
     if (!m) return false;
     const n = Number(m[1]);
@@ -426,12 +430,25 @@ function renderPicker() {
   const live = $('#st-live');
   const i = cur();
   live.hidden = i.status !== 'published';
-  live.href = issueUrl(siteBase(), i.number, S.previewAs);
+  const a = previewAudience();
+  live.href = issueUrl(siteBase(), i.number, a.to, a.group?.slug);
   $('#st-publish').textContent = i.status === 'published' ? 'Update live' : 'Publish';
 }
 
 function renderPreviewAs() {
-  $('#st-as').innerHTML = `<option value="">A friend (no name)</option>${S.friends.map(f => `<option value="${esc(f.name)}"${f.name === S.previewAs ? ' selected' : ''}>${esc(f.name)}${f.city ? ` · ${esc(f.city)}` : ''}</option>`).join('')}`;
+  const opt = (v, label) => `<option value="${esc(v)}"${v === S.previewAs ? ' selected' : ''}>${esc(label)}</option>`;
+  const groups = S.groups.length ? `<optgroup label="Groups">${S.groups.map(g => opt(`g:${g.id}`, `${g.name} (group page)`)).join('')}</optgroup>` : '';
+  const people = S.friends.map(f => opt(f.name, `${f.name}${f.city ? ` · ${f.city}` : ''}`)).join('');
+  $('#st-as').innerHTML = `${opt('', S.groups.length ? 'Shared page (no group)' : 'A friend (no name)')}${groups}${S.groups.length ? `<optgroup label="Friends">${people}</optgroup>` : people}`;
+}
+
+// What "Preview as" means: a group's page (g:<id>), or a friend's personal link on their group's page.
+function previewAudience() {
+  const v = S.previewAs || '';
+  if (v.startsWith('g:')) return { group: S.groups.find(g => g.id === v.slice(2)) || null, to: '' };
+  const f = S.friends.find(x => x.name === v);
+  const gid = (f?.groups || []).find(id => S.groups.some(g => g.id === id));
+  return { group: S.groups.find(g => g.id === gid) || null, to: v };
 }
 
 function siteBase() {
@@ -494,7 +511,7 @@ for (const g of EDITOR) {
 }
 const fieldDef = path => FIELDS.get(path) || FIELDS.get(String(path).replace(/\.\d+\./, '.*.'));
 const groupOf = path => fieldDef(path)?.group || String(path).split('.')[0];
-const PREVIEW_TARGET = { issue: '.mast', cover: '.cover', letter: '#letter', lately: '#lately', moment: '#moment', roll: '#roll', currently: '#currently', nextStop: '#next-stop', mailbag: '#mailbag', awake: '#awake', yourTurn: '#write-back' };
+const PREVIEW_TARGET = { issue: '.mast', opening: '.op', cover: '.cover', letter: '#letter', lately: '#lately', moment: '#moment', roll: '#roll', currently: '#currently', nextStop: '#next-stop', mailbag: '#mailbag', awake: '#awake', yourTurn: '#write-back' };
 
 function renderForm() {
   const issue = cur();
@@ -595,6 +612,17 @@ function fieldHTML(f, issue, path = f.path) {
 <div class="st-drop-txt"><div class="st-row"><label class="st-btn st-btn-quiet st-btn-sm st-file">${v ? 'Replace' : isVid ? 'Choose a video' : 'Choose a photo'}<input type="file" accept="${isVid ? 'video/mp4,video/quicktime,video/webm,video/*' : 'image/*'}" data-file="${esc(path)}"></label>${v ? `<button type="button" class="st-link" data-act="media-remove" data-path="${esc(path)}">Remove</button>` : ''}</div>
 <small>${v ? esc(meta) : isVid ? 'Or drop it here.' : `Or drop one here. It's shrunk to under ${f.kb || 250} KB before saving.`}</small></div></div>${hint}${errH}</div>`;
     }
+    case 'groupps': {
+      if (!S.groups.length) return `<div class="${cls}"><span class="st-label">${esc(f.label)}</span><small class="st-hint">Make friend groups under <button type="button" class="st-link" data-act="friends">Friends</button> to add a P.S. that only that group sees.</small></div>`;
+      return `<div class="${cls}"><span class="st-label">${esc(f.label)}</span>${hint}<div class="st-ps">${S.groups.map(g => {
+        const pid = `${id}-${g.id}`;
+        return `<div class="st-field"><label class="st-label st-label-sub" for="${pid}">${esc(g.name)} <em>Dear ${esc(g.salutation || g.name)},</em></label><textarea class="st-input" rows="2" id="${pid}" data-path="groups.${esc(g.id)}.ps" placeholder="Optional">${esc(issue.groups?.[g.id]?.ps || '')}</textarea></div>`;
+      }).join('')}</div></div>`;
+    }
+    case 'groupselect': {
+      if (!S.groups.length) return '';
+      return `<div class="${cls}">${label}<select class="st-select" ${attrs}><option value="">Every page</option>${S.groups.map(g => `<option value="${esc(g.id)}"${v === g.id ? ' selected' : ''}>${esc(g.name)} only</option>`).join('')}</select>${hint}</div>`;
+    }
     case 'tags': {
       const list = Array.isArray(v) ? v : [];
       return `<div class="${cls}">${label}<div class="st-tags">${list.map((t, i) => `<span class="st-tag">${esc(t)}<button type="button" data-act="tag-del" data-path="${esc(path)}" data-index="${i}" aria-label="Remove ${esc(t)}">×</button></span>`).join('')}<input class="st-tag-in" id="${id}" data-tag-in="${esc(path)}" placeholder="${list.length >= (f.max || 6) ? 'That\'s plenty' : 'Type one, press Enter'}"${list.length >= (f.max || 6) ? ' disabled' : ''}></div>${hint}</div>`;
@@ -642,6 +670,17 @@ function onInput(e) {
     t.setSelectionRange(at, at);
   }
   setPath(cur(), path, v);
+  // A quoted reply from someone in exactly one group is shown only to that group.
+  const note = /^mailbag\.notes\.(\d+)\.name$/.exec(path);
+  if (note) {
+    const n = cur().mailbag.notes[Number(note[1])];
+    const gs = (S.friends.find(f => f.name.toLowerCase() === v.trim().toLowerCase())?.groups || []).filter(id => S.groups.some(g => g.id === id));
+    if (!n.group && gs.length === 1) {
+      n.group = gs[0];
+      const sel = $(`[data-path="mailbag.notes.${note[1]}.group"]`);
+      if (sel) sel.value = gs[0];
+    }
+  }
   if (t.type === 'color') {
     const custom = t.closest('.st-swatch');
     custom?.style.setProperty('--sw', v);
@@ -966,23 +1005,44 @@ async function publish() {
 function contacts() { return store.get(KEY.contacts) || {}; }
 const clip = {};
 
-function openShare() {
+// Who an issue goes to: each friend group, plus friends in no group (the shared page).
+function audiences() {
+  const list = S.groups.map(g => ({ key: g.id, label: g.name, group: g, friends: audienceFriends(S.friends, S.groups, g.id) }));
+  const rest = audienceFriends(S.friends, S.groups, '');
+  if (!S.groups.length || rest.length) list.push({ key: '', label: S.groups.length ? 'Not in a group' : 'Everyone', group: null, friends: rest });
+  return list;
+}
+
+function openShare(key = S.shareKey) {
+  const all = audiences();
+  const aud = all.find(a => a.key === key) || all[0];
+  S.shareKey = aud.key;
+  const g = aud.group;
   const issue = cur();
   const site = S.site;
   const base = siteBase();
-  const url = issueUrl(base, issue.number);
+  const url = issueUrl(base, issue.number, '', g?.slug);
+  const mediaBase = issueUrl(base, issue.number); // photos live with the shared page
   const book = contacts();
-  const emails = S.friends.map(f => book[f.name]?.email).filter(Boolean);
+  const emails = aud.friends.map(f => book[f.name]?.email).filter(Boolean);
   const img = issue.card || issue.cover?.photo;
-  const parts = emailParts({ site, issue, url, imageUrl: img ? `${url}${img}` : '' });
+  const parts = emailParts({ site, issue, url, imageUrl: img ? `${mediaBase}${img}` : '', name: g?.salutation || '' });
   const bcc = bccMailto({ emails, site, issue, url, self: site.reply?.email });
-  const rows = personalLinks({ friends: S.friends, contacts: book, siteUrl: base, site, issue });
-  Object.assign(clip, { wa: whatsappText({ site, issue, url }), subject: parts.subject, html: parts.html, text: parts.text, emails: emails.join(', ') });
+  const rows = personalLinks({ friends: aud.friends, contacts: book, siteUrl: base, site, issue, slug: g?.slug });
+  Object.assign(clip, {
+    wa: whatsappText({ site, issue, url, name: g?.salutation || '' }), subject: parts.subject, html: parts.html, text: parts.text,
+    emails: emails.join(', '), glink: g ? groupLink(base, g.slug) : '',
+  });
   const live = issue.status === 'published';
   const cardPath = issue.card ? mediaFile(issue.number, issue.card) : '';
   dialog(`<header class="st-dh"><h2>Send No. ${pad2(issue.number)}</h2><button type="button" class="st-x" data-act="close" aria-label="Close">✕</button></header>
 <div class="st-db st-share">
+${all.length > 1 ? `<div class="st-aud"><span class="st-label">Send to</span><div class="st-seg st-seg-wrap" role="radiogroup" aria-label="Send to">${all.map(a => `<button type="button" role="radio" aria-checked="${a.key === aud.key}" data-act="share-aud" data-key="${esc(a.key)}">${esc(a.label)} <small>${a.friends.length}</small></button>`).join('')}</div></div>` : ''}
 ${live ? `<p class="st-ready"><span aria-hidden="true">✓</span> Live at <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></p>` : '<p class="st-alert">This issue is still a draft. The links below start working once you publish it.</p>'}
+${g ? `<section class="st-share-s"><h3><span>★</span> ${esc(g.name)} link</h3>
+<p class="st-muted">Pin it in the ${esc(g.name)} group chat. It always opens the newest postcard, greeting them as "${esc(g.salutation || g.name)}", with only this group on the map.</p>
+<div class="st-row"><input class="st-input" value="${esc(clip.glink)}" readonly aria-label="${esc(g.name)} link"><button type="button" class="st-btn st-btn-quiet" data-act="copy" data-key="glink">Copy</button></div>
+</section>` : ''}
 
 <section class="st-share-s"><h3><span>1</span> WhatsApp</h3>
 <p class="st-muted">Paste it into a chat, a group or a broadcast list. The link preview shows the card below.</p>
@@ -1015,7 +1075,7 @@ ${cardPath ? `<img class="st-card-img" data-thumb="${esc(cardPath)}" src="${esc(
 </div>`, 'is-wide');
   S.shareRows = rows;
   // The preview shows the image from this browser; the copied email points at the live site.
-  const liveImg = img ? `${url}${img}` : '';
+  const liveImg = img ? `${mediaBase}${img}` : '';
   const localImg = img ? mediaSrc(mediaFile(issue.number, img)) : '';
   const pvHtml = liveImg ? parts.html.split(`src="${esc(liveImg)}"`).join(`src="${esc(localImg)}" data-live="${esc(liveImg)}"`) : parts.html;
   const pv = $('#st-mailpv');
@@ -1091,7 +1151,12 @@ function openFriends() {
   const book = contacts();
   dialog(`<header class="st-dh"><h2>Friends</h2><button type="button" class="st-x" data-act="close" aria-label="Close">✕</button></header>
 <div class="st-db">
-<p class="st-muted"><b>Name, city and time zone show on the site</b> in "Who's awake", so anyone with the link can see them; they're also saved to the repository. First names are plenty. <b>Email and WhatsApp stay on this device</b> and are never saved to GitHub; use them to send personal links.</p>
+<h3 class="st-h3">Groups</h3>
+<p class="st-muted">Each group gets its own page for every issue: only its own friends on the map, only its own replies in the Mailbag, and its own greeting and P.S. Friends in no group see the shared page.</p>
+<ol class="st-groups">${S.groups.map((g, i) => groupRowHTML(g, i)).join('')}</ol>
+<div class="st-row st-group-add"><label class="sr-only" for="st-new-group">New group name</label><input class="st-input" id="st-new-group" placeholder="New group, like College or Work"><button type="button" class="st-btn st-btn-quiet" data-act="group-add">Add group</button></div>
+<h3 class="st-h3">People</h3>
+<p class="st-muted"><b>Name, city and time zone show on the site</b> in "Who's awake" for their group, so anyone with that link can see them; they're also saved to the repository. First names are plenty. <b>Email and WhatsApp stay on this device</b> and are never saved to GitHub; use them to send personal links.</p>
 <ol class="st-friends" id="st-friends">${S.friends.map((f, i) => friendHTML(f, i, book[f.name] || {})).join('')}</ol>
 <datalist id="st-tzs">${timeZones().map(z => `<option value="${esc(z)}">`).join('')}</datalist>
 <div class="st-row"><button type="button" class="st-btn st-btn-quiet" data-act="friend-add">Add a friend</button><span class="st-spacer"></span>
@@ -1099,6 +1164,15 @@ function openFriends() {
 <label class="st-btn st-btn-quiet st-btn-sm st-file">Restore<input type="file" accept="application/json,.json" data-contacts-import></label></div>
 </div>
 <footer class="st-df"><button type="button" class="st-btn st-btn-primary" data-act="close">Done</button></footer>`, 'is-wide');
+}
+
+function groupRowHTML(g, i) {
+  const count = S.friends.filter(f => (f.groups || []).includes(g.id)).length;
+  return `<li class="st-group" data-group-i="${i}">
+<div class="st-field is-half"><label class="st-label" for="gr-${i}-name">Name</label><input class="st-input" id="gr-${i}-name" data-gr="name" value="${esc(g.name)}"></div>
+<div class="st-field is-half"><label class="st-label" for="gr-${i}-sal">Greeting</label><div class="st-row st-dear"><span>Dear</span><input class="st-input" id="gr-${i}-sal" data-gr="salutation" value="${esc(g.salutation || '')}" placeholder="college crew"></div></div>
+<p class="st-hint st-group-meta">${count} friend${count === 1 ? '' : 's'} · pin <code>${esc(groupLink(siteBase(), g.slug))}</code> in the group chat; it always shows the newest issue. <button type="button" class="st-link is-danger" data-act="group-del" data-index="${i}">Remove group</button></p>
+</li>`;
 }
 
 function friendHTML(f, i, c) {
@@ -1109,6 +1183,7 @@ function friendHTML(f, i, c) {
 <div class="st-field is-half"><label class="st-label" for="${id('tz')}">Time zone</label><input class="st-input" id="${id('tz')}" data-fr="tz" list="st-tzs" value="${esc(f.tz || '')}" placeholder="Europe/Berlin"><small class="st-hint">${f.lat != null && f.lon != null ? `Pinned at ${esc(fmtCoords(f.lat, f.lon))}${f.country ? `, ${esc(f.country)}` : ''}` : 'Press Find to pin them on the map.'}</small></div>
 <div class="st-field is-half st-private"><label class="st-label" for="${id('email')}">Email <em>on this device only</em></label><input class="st-input" type="email" id="${id('email')}" data-pr="email" value="${esc(c.email || '')}" autocomplete="off"></div>
 <div class="st-field is-half st-private"><label class="st-label" for="${id('wa')}">WhatsApp <em>on this device only</em></label><input class="st-input" type="tel" id="${id('wa')}" data-pr="whatsapp" value="${esc(c.whatsapp || '')}" placeholder="+49 151 2345678" autocomplete="off"></div>
+${S.groups.length ? `<fieldset class="st-field st-fgroups"><legend class="st-label">Groups</legend><div class="st-chips">${S.groups.map(g => `<label class="st-chip"><input type="checkbox" data-fg="${esc(g.id)}"${(f.groups || []).includes(g.id) ? ' checked' : ''}><span>${esc(g.name)}</span></label>`).join('')}</div></fieldset>` : ''}
 <div class="st-field is-half st-friend-x"><button type="button" class="st-link is-danger" data-act="friend-del" data-index="${i}">Remove ${esc(f.name || 'friend')}</button></div>
 </li>`;
 }
@@ -1120,7 +1195,11 @@ function onFriendInput(e) {
   const i = Number(li.dataset.friend);
   const f = S.friends[i];
   const book = contacts();
-  if (t.dataset.fr) {
+  if (t.dataset.fg) {
+    const set = new Set(f.groups || []);
+    if (t.checked) set.add(t.dataset.fg); else set.delete(t.dataset.fg);
+    f.groups = [...set];
+  } else if (t.dataset.fr) {
     const old = f.name;
     f[t.dataset.fr] = t.value;
     if (t.dataset.fr === 'name' && book[old]) { book[t.value] = book[old]; delete book[old]; store.set(KEY.contacts, book); }
@@ -1202,11 +1281,11 @@ function schedulePreview() {
 }
 
 function previewCtx() {
-  return {
-    site: S.site, friends: S.friends, root: '../',
+  return forAudience({
+    site: S.site, friends: S.friends, groups: S.groups, root: '../',
     issues: [...S.issues.values()].filter(i => i.status === 'published' || i.number === S.current),
     media: (issue, src) => mediaSrc(mediaFile(issue.number, src)),
-  };
+  }, previewAudience().group);
 }
 
 function frameStart() {
@@ -1232,7 +1311,7 @@ function onFrameLoad() {
 
 function mountPreview(tries = 0) {
   const w = frame()?.contentWindow;
-  if (w?.Postcards) w.Postcards.mount({ to: S.previewAs, preview: true });
+  if (w?.Postcards) w.Postcards.mount({ to: previewAudience().to, preview: true });
   else if (tries < 40) setTimeout(() => mountPreview(tries + 1), 50);
 }
 
@@ -1360,6 +1439,7 @@ const ACT = {
   'copy-email': () => copyEmail(),
   'copy-link': b => copyText(S.shareRows[Number(b.dataset.index)].url, `Copied ${S.shareRows[Number(b.dataset.index)].name}'s link.`),
   'new-card': () => newCard(),
+  'share-aud': b => openShare(b.dataset.key),
   'friend-add': () => {
     S.friends.push({ name: '', city: '', country: '', tz: '', lat: null, lon: null });
     openFriends();
@@ -1385,6 +1465,26 @@ const ACT = {
     });
   },
   'contacts-export': () => exportContacts(),
+  'group-add': () => {
+    const input = $('#st-new-group');
+    const name = input.value.trim();
+    if (!name) return input.focus();
+    S.groups.push(newGroup(name, S.groups));
+    openFriends();
+    updateStatus();
+    persist();
+    toast(`Added ${name}. Tick it on each friend who belongs to it.`);
+  },
+  'group-del': b => {
+    const g = S.groups[Number(b.dataset.index)];
+    if (!confirm(`Remove the ${g.name} group? Its friends move to the shared page, and its links stop working once you save.`)) return;
+    S.groups.splice(Number(b.dataset.index), 1);
+    for (const f of S.friends) if (f.groups) f.groups = f.groups.filter(id => id !== g.id);
+    if (S.previewAs === `g:${g.id}`) S.previewAs = '';
+    openFriends();
+    updateStatus();
+    persist();
+  },
   'sign-out': () => {
     if (changes().length && !confirm('You have unsaved changes. They stay on this device, but sign out anyway?')) return;
     store.del(KEY.token);
@@ -1464,13 +1564,20 @@ function wireApp() {
   $('#st-as').addEventListener('change', e => {
     S.previewAs = e.target.value;
     renderPicker();
-    mountPreview();
+    renderPreview();
   });
   frame().addEventListener('load', onFrameLoad);
 
   const d = $('#st-dialog');
   d.addEventListener('input', e => {
     if (e.target.closest('[data-friend]')) return onFriendInput(e);
+    const gi = e.target.closest('[data-group-i]');
+    if (gi && e.target.dataset.gr) {
+      S.groups[Number(gi.dataset.groupI)][e.target.dataset.gr] = e.target.value;
+      updateStatus();
+      persist();
+      return;
+    }
     const sp = e.target.dataset.site;
     if (sp) {
       setPath(S.site, sp, e.target.value);
@@ -1484,7 +1591,7 @@ function wireApp() {
   });
   d.addEventListener('close', () => {
     renderPreviewAs();
-    rerenderGroup('awake');
+    ['letter', 'mailbag', 'awake'].forEach(rerenderGroup); // groups may have changed
     renderPicker();
     schedulePreview();
   });

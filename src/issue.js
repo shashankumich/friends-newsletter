@@ -27,6 +27,7 @@ export function mount(opts = {}) {
   const data = JSON.parse(el.textContent);
   const me = resolve(opts.to !== undefined ? clean(opts.to) : readTo(), data.friends);
   personalise(doc, data, me);
+  opening(doc, opts.preview);
   clocks(doc, me);
   roll(doc);
   players(doc);
@@ -62,8 +63,33 @@ const fromLine = me => (me ? (me.city ? `${me.name}, ${me.city}` : me.name) : ''
 
 function personalise(doc, data, me) {
   doc.querySelectorAll('[data-pc-dear]').forEach(n => {
-    n.textContent = `${n.dataset.greeting || 'Dear'} ${me ? me.name : 'friend'},`;
+    n.textContent = `${n.dataset.greeting || 'Dear'} ${me ? me.name : n.dataset.fallback || 'friend'},`;
   });
+}
+
+/* ---------- opening quote ---------- */
+
+// The Studio preview re-renders on every keystroke, so the reveal plays only the first time.
+let openingSeen = false;
+function opening(doc, preview) {
+  const op = doc.querySelector('[data-pc-opening]');
+  if (!op) return;
+  if (openingSeen) return op.classList.add('is-in', 'is-instant');
+  // It usually opens the page, so start right away when it's already on screen (or in the Studio,
+  // whose preview may be on a hidden tab).
+  if (preview || !('IntersectionObserver' in window) || op.getBoundingClientRect().top < innerHeight * 0.8) {
+    op.classList.add('is-in');
+    openingSeen = true;
+    return;
+  }
+  const io = new IntersectionObserver(entries => {
+    if (!entries.some(e => e.isIntersecting)) return;
+    op.classList.add('is-in');
+    openingSeen = true;
+    io.disconnect();
+  }, { threshold: 0.2 });
+  io.observe(op);
+  cleanups.push(() => io.disconnect());
 }
 
 /* ---------- who's awake ---------- */

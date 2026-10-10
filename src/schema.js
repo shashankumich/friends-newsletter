@@ -113,6 +113,7 @@ export function blankIssue({ number, date, previous } = {}) {
     season: seasonFor(day),
     date: day,
     color: SWATCHES[(number - 1) % SWATCHES.length].hex,
+    opening: { on: false, quote: '', source: '', note: '' },
     cover: { greeting: 'Greetings from', place: '', country: '', lat: null, lon: null, photo: '', w: 0, h: 0, alt: '', dek: '' },
     letter: { greeting: 'Dear', body: '', signoff: 'Love,' },
     lately: {
@@ -131,7 +132,54 @@ export function blankIssue({ number, date, previous } = {}) {
     mailbag: { on: true, title: 'What you said last time', question: previous?.yourTurn?.question || '', notes: [] },
     awake: { on: true },
     yourTurn: { question: '', stamps: [...(previous?.yourTurn?.stamps || DEFAULT_STAMPS)] },
+    groups: {}, // per-group extras, keyed by group id: { ps }
   };
+}
+
+/* ---------- friend groups ---------- */
+// content/groups.json: [{ id, name, salutation, slug }]. Friends list their group ids in `groups`.
+// Each group gets its own page per issue at issues/NN/<slug>/, showing only that group's friends
+// and replies, so names never cross between groups. The slug's random tail stops casual guessing.
+
+export const slugify = s => String(s || '').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '')
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 24) || 'group';
+
+export function newGroup(name, existing = [], rand = () => Math.random().toString(36).slice(2, 7)) {
+  let id = slugify(name);
+  for (let i = 2; existing.some(g => g.id === id); i++) id = `${slugify(name)}-${i}`;
+  return { id, name: String(name).trim(), salutation: `${String(name).trim()} crew`, slug: `${id}-${rand()}` };
+}
+
+// The friends one page shows: a group's members, or, on the shared page, everyone in no group.
+export function audienceFriends(friends = [], groups = [], groupId = '') {
+  if (groupId) return friends.filter(f => (f.groups || []).includes(groupId));
+  return groups.length ? friends.filter(f => !(f.groups || []).some(id => groups.some(g => g.id === id))) : friends;
+}
+
+// The issue as one audience sees it: their P.S., and only replies tagged for them (or untagged).
+export function scopeIssue(issue, groupId = '') {
+  const notes = (issue.mailbag?.notes || []).filter(n => !n.group || n.group === groupId);
+  return {
+    ...issue,
+    letter: { ...issue.letter, ps: groupId ? issue.groups?.[groupId]?.ps || '' : '' },
+    mailbag: issue.mailbag ? { ...issue.mailbag, notes } : issue.mailbag,
+  };
+}
+
+export function validateGroups(groups = [], friends = []) {
+  const problems = [];
+  const seen = new Set();
+  for (const g of groups) {
+    if (!/^[a-z0-9-]+$/.test(g.id || '')) problems.push(`groups.json: "${g.name || g.id}" needs an id of lowercase letters, numbers and dashes.`);
+    if (!/^[a-z0-9-]{6,}$/.test(g.slug || '')) problems.push(`groups.json: "${g.name || g.id}" needs a slug of at least 6 lowercase letters, numbers and dashes.`);
+    if (seen.has(g.id) || seen.has(g.slug)) problems.push(`groups.json: "${g.name || g.id}" is listed twice.`);
+    seen.add(g.id);
+    seen.add(g.slug);
+  }
+  for (const f of friends) {
+    for (const id of f.groups || []) if (!groups.some(g => g.id === id)) problems.push(`friends.json: ${f.name} is in a group "${id}" that isn't in groups.json.`);
+  }
+  return problems;
 }
 
 /* ---------- validation ---------- */
@@ -198,6 +246,14 @@ export const EDITOR = [
     ],
   },
   {
+    key: 'opening', label: 'Opening quote', toggle: 'opening.on', hint: 'A few lines friends read before the cover, like the epigraph of a book. It appears one sentence at a time.',
+    fields: [
+      { path: 'opening.quote', type: 'textarea', rows: 5, label: 'Quote', hint: 'Put *asterisks* around the words that matter most; they get underlined, last.' },
+      { path: 'opening.source', type: 'text', label: 'Who said it', placeholder: 'Name, and where it\'s from' },
+      { path: 'opening.note', type: 'text', label: 'Your reply to it', placeholder: 'So this is me, doing something about it.', hint: 'In your handwriting under the quote, with an arrow down to the cover.' },
+    ],
+  },
+  {
     key: 'cover', label: 'Cover', hint: 'The large-letter postcard friends see first.',
     fields: [
       { path: 'cover.greeting', type: 'text', label: 'Greeting', placeholder: 'Greetings from' },
@@ -214,6 +270,7 @@ export const EDITOR = [
       { path: 'letter.greeting', type: 'text', label: 'Greeting', placeholder: 'Dear', hint: 'Followed by the friend\'s name, from their personal link.' },
       { path: 'letter.body', type: 'textarea', rows: 9, label: 'Letter', required: true, hint: 'Blank line between paragraphs. *italic* and **bold** work.' },
       { path: 'letter.signoff', type: 'text', label: 'Sign-off', placeholder: 'Love,' },
+      { path: 'groups', type: 'groupps', label: 'P.S. for each group', hint: 'Optional. Each group sees only its own, under your signature.' },
     ],
   },
   {
@@ -277,7 +334,7 @@ export const EDITOR = [
     ],
   },
   {
-    key: 'mailbag', label: 'Mailbag', toggle: 'mailbag.on', hint: 'Answers to last issue\'s question. Only quote friends who said OK.',
+    key: 'mailbag', label: 'Mailbag', toggle: 'mailbag.on', hint: 'Answers to last issue\'s question. Only quote friends who said OK. Each group sees only its own.',
     fields: [
       { path: 'mailbag.title', type: 'text', label: 'Heading' },
       { path: 'mailbag.question', type: 'text', label: 'Last time\'s question' },
@@ -286,6 +343,7 @@ export const EDITOR = [
           { key: 'text', type: 'textarea', rows: 2, label: 'What they said' },
           { key: 'name', type: 'text', label: 'Name', half: true },
           { key: 'city', type: 'text', label: 'City', half: true },
+          { key: 'group', type: 'groupselect', label: 'Shown to', hint: 'Set automatically from their group.' },
         ] },
     ],
   },

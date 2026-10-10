@@ -55,7 +55,7 @@ No. 01 is a sample: made-up friends, placeholder illustrations, and a "Sample is
 ## 2. Making an issue (the hour)
 
 1. **New issue.** It starts as a draft with your last question carried into the Mailbag, the stamps from last time, and the next colour in the palette.
-2. **Fill the sections.** Every section has an on/off switch. Aim for five or six: the cover, letter and "Your turn" are always there; pick two or three of the others.
+2. **Fill the sections.** Every section has an on/off switch. To open with a quote, switch on **Opening quote**: it plays before the cover, one sentence at a time, the words you wrap in `*asterisks*` get underlined last, and your reply appears in your handwriting with an arrow down to the cover. Aim for five or six: the cover, letter and "Your turn" are always there; pick two or three of the others.
    - Photos are shrunk in the browser (around 200 KB each, WebP) before they're saved, and re-encoding strips their location data.
    - Videos: an MP4 of 30 seconds or less from your phone, up to 40 MB. A poster frame is made for you. Videos are uploaded as they are, metadata included. For anything longer, upload to YouTube as unlisted and paste the link.
    - The preview updates as you type. Use **Preview as** to see the page the way a particular friend will, greeted by name and marked on the map.
@@ -73,7 +73,21 @@ Press **Share** (or **Send it to friends** after publishing):
 - **Personal links:** one per friend, like `…/issues/02/?to=Priya`. The page greets them by name, puts "You" on their map pin, and fills in the From line on their reply. If you've saved their WhatsApp number or email, there are one-tap buttons to send their link directly.
 - **Social card:** the 1200×630 image used in link previews. It's redrawn on every publish, and **Redraw it now** makes a new one.
 
-## 4. How friends reply
+## 4. Friend groups
+
+Groups let you send one issue to several circles at once (college friends, work friends, family) while keeping them apart. Set them up under **Friends → Groups**, then tick the groups each friend belongs to. A friend can be in more than one.
+
+- **Each group gets its own page for every issue**, like `/issues/02/college-k3f9q/`. The short random ending stops anyone guessing another group's address.
+- **Separate on purpose.** A group's page shows only that group's friends on the "Who's awake" map, and only replies tagged for that group (or for every page) in the Mailbag. When you type a quoted friend's name, their reply is tagged with their group automatically; change it under **Shown to**.
+- **Its own greeting and P.S.** The page opens "Dear college crew," (set the greeting per group), and you can add a short P.S. per group at the end of the letter. Personal links still greet each person by name.
+- **A permanent link per group**, like `/g/college-k3f9q/`, always shows the newest issue. Pin it in the group chat once.
+- **Sending:** in **Share**, pick the group at the top. The WhatsApp message, the BCC email and the personal links all point at that group's page.
+- **Friends in no group** see the shared page (`/issues/02/`), which shows only them on the map. If everyone is in a group, the shared page has no map.
+- **Preview as** lets you see each group's page, or any friend's, before you publish.
+
+A group page isn't password-protected: anyone you forward its link to can read it. The shared pages and the archive never link to group pages, though, and their addresses aren't listed anywhere public.
+
+## 5. How friends reply
 
 Everything works with nothing to install and no accounts.
 
@@ -85,17 +99,17 @@ To feature replies in the next issue, add them under **Mailbag**, only for frien
 
 ---
 
-## 5. Privacy, in plain terms
+## 6. Privacy, in plain terms
 
 - **The site is public but unlisted.** Every page carries `noindex`, `robots.txt` blocks crawlers, and nothing links to it except what you send. Anyone who has a link can open it and can guess other issue addresses (`/issues/01/`, `/issues/02/`…).
 - **`?to=Name` is a greeting, not a login.** Anyone can type any name.
-- **In the repository:** issue text, photos, videos, friends' names, cities and time zones, and your reply number and email.
+- **In the repository:** issue text, photos, videos, friends' names, cities, time zones and groups, the group page addresses, and your reply number and email.
 - **Only in your browser:** friends' email addresses and phone numbers, your GitHub token, and unsaved drafts.
 - **Drafts** never appear on the site, but they are in the repository.
 
 ---
 
-## 6. Working on the code
+## 7. Working on the code
 
 Requires Node 20 or newer. Nothing to install.
 
@@ -113,8 +127,9 @@ In practice mode, open `http://localhost:8080/studio/?api=http://127.0.0.1:8081`
 | Path | What it is |
 |---|---|
 | `content/site.json` | Title, your name, reply WhatsApp/email, repo and branch the Studio saves to, optional custom domain (`baseUrl`) |
-| `content/friends.json` | The friend list: name, city, country, time zone, map position |
-| `content/issues/NN/issue.json` | One issue. `status` is `draft` or `published`; each section has an `on` switch |
+| `content/friends.json` | The friend list: name, city, country, time zone, map position, groups |
+| `content/groups.json` | Friend groups: name, greeting and the random page address (`slug`) |
+| `content/issues/NN/issue.json` | One issue. `status` is `draft` or `published`; each section has an `on` switch; `groups` holds each group's P.S. |
 | `content/issues/NN/media/` | That issue's photos, video, poster frame and social card |
 | `src/schema.js` | The content model: sections, defaults, validation, and the Studio's form fields |
 | `src/render.js` | Turns an issue into HTML. The same file runs in the Node build and in the Studio preview |
@@ -132,7 +147,7 @@ Add it under **Settings → Pages → Custom domain** on GitHub, then put the fu
 
 ---
 
-## 7. Troubleshooting
+## 8. Troubleshooting
 
 | Problem | Fix |
 |---|---|
