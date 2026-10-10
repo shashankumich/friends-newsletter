@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { waLink, mailLink, replyMessage, aroundMessage } from '../src/links.js';
 import { issueUrl, whatsappText, emailParts, bccMailto, personalLinks, MAILTO_LIMIT } from '../src/share.js';
 
-const read = p => JSON.parse(readFileSync(new URL(`../content/${p}`, import.meta.url)));
+const read = p => JSON.parse(readFileSync(new URL(`./fixtures/content/${p}`, import.meta.url)));
 const site = read('site.json');
 const friends = read('friends.json');
 const issue = read('issues/01/issue.json');

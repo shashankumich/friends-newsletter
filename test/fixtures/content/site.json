@@ -1,0 +1,12 @@
+{
+  "title": "Postcards",
+  "author": "Shashank",
+  "description": "A seasonal letter to friends around the world.",
+  "baseUrl": "",
+  "repo": "shashankumich/friends-newsletter",
+  "branch": "main",
+  "reply": {
+    "whatsapp": "",
+    "email": ""
+  }
+}
