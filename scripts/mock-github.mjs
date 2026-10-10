@@ -24,7 +24,7 @@ async function walk(dir, base = dir) {
   return out;
 }
 
-export async function startMockGitHub({ port = 0, contentDir, owner = 'you', repo = 'friends-newsletter', branch = 'master', siteUrl = 'http://localhost:8080/', deploySeconds = [2, 5, 8] } = {}) {
+export async function startMockGitHub({ port = 0, contentDir, owner = 'you', repo = 'friends-newsletter', branch = 'main', siteUrl = 'http://localhost:8080/', deploySeconds = [2, 5, 8] } = {}) {
   const blobs = new Map();   // sha -> Buffer
   const trees = new Map();   // sha -> Map(path -> blob sha)
   const commits = new Map(); // sha -> { sha, tree, parents, message, date }

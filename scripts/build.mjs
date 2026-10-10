@@ -134,7 +134,7 @@ export async function build({
   const studio = path.join(SRC, 'studio.html');
   if (existsSync(studio)) {
     await mkdir(path.join(outDir, 'studio'), { recursive: true });
-    const config = { repo: site.repo || process.env.GITHUB_REPOSITORY || '', branch: site.branch || 'master' };
+    const config = { repo: site.repo || process.env.GITHUB_REPOSITORY || '', branch: site.branch || 'main' };
     const html = (await readFile(studio, 'utf8')).replaceAll('%V%', v).replaceAll('%FONTS%', FONTS_URL)
       .replaceAll('%CONFIG%', JSON.stringify(config).replace(/</g, '\\u003c'));
     await writeFile(path.join(outDir, 'studio', 'index.html'), html);

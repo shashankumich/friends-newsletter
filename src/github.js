@@ -49,7 +49,7 @@ async function bytesOf(content) {
 /* ---------- client ---------- */
 
 export class GitHub {
-  constructor({ token, owner, repo, branch = 'master', api = 'https://api.github.com', fetch: f } = {}) {
+  constructor({ token, owner, repo, branch = 'main', api = 'https://api.github.com', fetch: f } = {}) {
     Object.assign(this, { token, owner, repo, branch, api: api.replace(/\/+$/, '') });
     this.fetch = f || ((...a) => globalThis.fetch(...a));
   }

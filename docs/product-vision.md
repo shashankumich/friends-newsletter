@@ -149,7 +149,7 @@ All of this is free at the size of a friend group. The table shows what was buil
 | Piece | Built as | Why |
 |---|---|---|
 | Site | A dependency-free static build (`scripts/build.mjs`); one folder per issue (`issue.json` + media) and a shared renderer used by both the build and the Studio preview | Full design control, plain files, nothing to maintain |
-| Hosting | GitHub Pages, deployed by GitHub Actions on every push to `master` | Free, and the repo is the whole system |
+| Hosting | GitHub Pages, deployed by GitHub Actions on every push to `main` | Free, and the repo is the whole system |
 | Editor | The Studio at `/studio/`: form editor with live preview, in-browser photo compression, one commit per save through the GitHub Git Data API, deploy progress, and a share panel | Under an hour per issue, from any device, with no app to install |
 | Video | Short MP4s committed with the issue (poster frame and duration made in the browser), or unlisted YouTube for anything longer | Simple; loads only when played |
 | Replies and stamps | `wa.me` and `mailto` links filled in with the friend's answer, stamps, consent and name | No server, no accounts, and replies land where conversations already happen |

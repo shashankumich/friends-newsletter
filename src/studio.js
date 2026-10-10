@@ -80,7 +80,7 @@ const idb = (() => {
 /* ---------- state ---------- */
 
 const S = {
-  gh: null, api: GITHUB_API, mock: false, repo: '', branch: 'master', user: null,
+  gh: null, api: GITHUB_API, mock: false, repo: '', branch: 'main', user: null,
   base: null, // { sha, tree, files: Map(path -> { sha, size }) } as last read from GitHub
   site: null, friends: [], issues: new Map(),
   orig: { site: '', friends: '', issues: new Map() },
@@ -113,7 +113,7 @@ async function boot() {
   S.mock = S.api !== GITHUB_API;
   const saved = store.get(KEY.repo) || {};
   S.repo = saved.repo || CONFIG.repo || guessRepo();
-  S.branch = saved.branch || CONFIG.branch || 'master';
+  S.branch = saved.branch || CONFIG.branch || 'main';
   Object.assign(S, store.get(KEY.prefs) || {});
   if (S.mock) { const [, name] = S.repo.split('/'); S.repo = `you/${name || 'friends-newsletter'}`; }
   const token = store.get(KEY.token, 'session') || store.get(KEY.token);
@@ -167,7 +167,7 @@ ${S.mock ? `<p class="st-mockline">Practice mode: talking to a pretend GitHub at
     const btn = e.submitter || $('#st-signin button[type=submit]');
     const token = $('#st-token').value.trim();
     S.repo = $('#st-repo').value.trim().replace(/^https:\/\/github\.com\//, '').replace(/\.git$|\/$/g, '');
-    S.branch = $('#st-branch').value.trim() || 'master';
+    S.branch = $('#st-branch').value.trim() || 'main';
     if (!/^[\w.-]+\/[\w.-]+$/.test(S.repo)) return signIn('The repository should look like owner/name.');
     S.remember = $('#st-remember').checked;
     btn.disabled = true;

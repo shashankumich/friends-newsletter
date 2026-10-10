@@ -15,31 +15,21 @@ You, in the Studio ──save──▶ GitHub repo (content/) ──Actions─�
 
 ## 1. One-time setup (about 15 minutes)
 
-### a. Decide: public or private repository
+### a. Public repository, free hosting
 
-GitHub Pages only works on **private** repositories with a paid plan (GitHub Pro, about $4/month, or Team). On the free plan the repository has to be **public**. Your options:
+The repository is **public**, which is what lets GitHub Pages host the site for free. Anyone can see the issue text, photos, and friends' first names and cities on GitHub, but all of that is on the site anyway. Friends' email addresses and phone numbers are never saved to the repository.
 
-| Option | Cost | What's visible on GitHub |
-|---|---|---|
-| Make the repo public | Free | Issue text, photos, and friends' first names and cities. All of these are already on the site anyway. Email addresses and phone numbers are never in the repo. |
-| Keep it private, upgrade to GitHub Pro | ~$4/month | Nothing. The *site* is still public (unlisted), as on any Pages plan below Enterprise. |
-| Keep it private, host the site somewhere else (Cloudflare Pages or Netlify, both free) | Free | Nothing. Needs a different deploy step in `.github/workflows/deploy.yml`; ask Claude to switch it. |
+To make the repository private later, Pages then needs a paid plan (GitHub Pro, about $4/month). The other way is to host the site on Cloudflare Pages or Netlify, both free, which needs a different deploy step in `.github/workflows/deploy.yml`. The Studio works either way: it reads the repository through your token, so it doesn't care whether the repo is private.
 
-Everything else works the same whichever you pick. The Studio reads the repo through the authenticated API, so it doesn't care whether the repo is private. On the free plan, private repos get 2,000 GitHub Actions minutes a month, and each deploy takes about a minute.
+### b. The `main` branch
 
-### b. Put the code on `master`
-
-The site deploys from `master`. Merge the `claude/newsletter-prototype` branch into `master`, either through a pull request on GitHub or with:
-
-```bash
-git checkout master && git merge claude/newsletter-prototype && git push
-```
+The site deploys from `main`. Every push to it, including every save from the Studio, runs the tests, rebuilds the site and deploys it.
 
 ### c. Turn on GitHub Pages
 
 1. On GitHub, open the repo's **Settings → Pages**.
 2. Under **Build and deployment → Source**, choose **GitHub Actions**.
-3. Open the **Actions** tab, pick **Deploy to GitHub Pages**, and press **Run workflow** (any push to `master` also starts it).
+3. Open the **Actions** tab, pick **Deploy to GitHub Pages**, and press **Run workflow** (any push to `main` also starts it).
 4. After about a minute, the site is live at the address above. The workflow runs the tests before every deploy, so a broken change never goes live.
 
 ### d. Sign in to the Studio
@@ -133,7 +123,7 @@ In practice mode, open `http://localhost:8080/studio/?api=http://127.0.0.1:8081`
 | `src/studio.*`, `src/github.js`, `src/media.js` | The Studio, its GitHub client (one commit per save via the Git Data API) and its photo/video/social-card tools |
 | `scripts/build.mjs` | The build: validates content, renders every page, fingerprints assets, writes `dist/` |
 | `scripts/serve.mjs`, `scripts/mock-github.mjs` | Local preview server and the pretend GitHub API |
-| `.github/workflows/deploy.yml` | Test, build and deploy to Pages on every push to `master` |
+| `.github/workflows/deploy.yml` | Test, build and deploy to Pages on every push to `main` |
 | `test/` | `node:test` suites |
 
 ### Custom domain
