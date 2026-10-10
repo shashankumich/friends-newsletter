@@ -11,7 +11,7 @@ import { personalLinks, groupLink, issueUrl } from '../src/share.js';
 import { build } from '../scripts/build.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const read = p => JSON.parse(readFileSync(path.join(ROOT, 'content', p)));
+const read = p => JSON.parse(readFileSync(path.join(ROOT, 'test/fixtures/content', p)));
 const site = read('site.json');
 const groups = [
   { id: 'college', name: 'College', salutation: 'college crew', slug: 'college-k3f9q' },
@@ -113,7 +113,7 @@ before(async () => {
   tmp = await mkdtemp(path.join(tmpdir(), 'postcards-groups-'));
   const content = path.join(tmp, 'content');
   out = path.join(tmp, 'dist');
-  await cp(path.join(ROOT, 'content'), content, { recursive: true });
+  await cp(path.join(ROOT, 'test/fixtures/content'), content, { recursive: true });
   await writeFile(path.join(content, 'groups.json'), JSON.stringify(groups));
   await writeFile(path.join(content, 'friends.json'), JSON.stringify(friends));
   await writeFile(path.join(content, 'issues/01/issue.json'), JSON.stringify(issue()));

@@ -11,7 +11,7 @@ const gh = (token = 'test-token') => new GitHub({ token, owner: mock.owner, repo
 const files = async () => (await fetch(`${mock.url}/__mock/files`)).json();
 const file = async p => Buffer.from(await (await fetch(`${mock.url}/__mock/files?path=${encodeURIComponent(p)}`)).arrayBuffer());
 
-before(async () => { mock = await startMockGitHub({ contentDir: path.join(ROOT, 'content'), deploySeconds: [0.2, 0.4, 0.6] }); });
+before(async () => { mock = await startMockGitHub({ contentDir: path.join(ROOT, 'test/fixtures/content'), deploySeconds: [0.2, 0.4, 0.6] }); });
 after(() => mock.close());
 
 test('base64 round-trips binary data', () => {

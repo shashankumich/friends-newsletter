@@ -2,11 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
-  seasonFor, nextSeasons, validateIssue, youtubeId, blankIssue, isShown, momentKind, getPath, setPath, mediaPaths, EDITOR,
+  placeholders, seasonFor, nextSeasons, validateIssue, youtubeId, blankIssue, isShown, momentKind, getPath, setPath, mediaPaths, EDITOR,
 } from '../src/schema.js';
 
-const sample = () => JSON.parse(readFileSync(new URL('../content/issues/01/issue.json', import.meta.url)));
-const friends = JSON.parse(readFileSync(new URL('../content/friends.json', import.meta.url)));
+const sample = () => JSON.parse(readFileSync(new URL('./fixtures/content/issues/01/issue.json', import.meta.url)));
+const friends = JSON.parse(readFileSync(new URL('./fixtures/content/friends.json', import.meta.url)));
 
 test('seasons follow the calendar', () => {
   assert.equal(seasonFor('2026-10-09'), 'Autumn 2026');
@@ -87,4 +87,14 @@ test('every editor field points at a real place in a blank issue', () => {
     for (const f of g.fields) assert.notEqual(getPath(blank, f.path.split('.').slice(0, 1).join('.')), undefined, f.path);
     if (g.toggle) assert.equal(typeof getPath(blank, g.toggle), 'boolean', g.toggle);
   }
+});
+
+test("bracketed draft prompts block publishing, but links and switched-off sections don't", () => {
+  const i = sample();
+  i.letter.body = 'I spent [how long] in New York. See [the map](https://example.com).';
+  i.nextStop = { on: false, place: 'Arcadia', dates: '[when]' };
+  assert.deepEqual(placeholders(i), [['letter.body', '[how long]']]);
+  assert.ok(validateIssue(i).errors.some(e => e.path === 'letter.body' && e.msg.includes('[how long]')));
+  i.letter.body = 'All filled in.';
+  assert.deepEqual(placeholders(i), []);
 });

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { esc, inline, paras, palette, contrast, renderIssuePage, renderIssueBody, renderArchivePage, pageData, shownSections, mediaUrl, fmtCoords, coverFontSize } from '../src/render.js';
 
-const read = p => JSON.parse(readFileSync(new URL(`../content/${p}`, import.meta.url)));
+const read = p => JSON.parse(readFileSync(new URL(`./fixtures/content/${p}`, import.meta.url)));
 const site = { ...read('site.json'), reply: { whatsapp: '+44 7700 900123', email: 'me@example.com' } };
 const friends = read('friends.json');
 const sample = () => read('issues/01/issue.json');

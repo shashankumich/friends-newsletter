@@ -83,6 +83,7 @@ export function hasContent(key, s, friends = []) {
   if (!s) return false;
   switch (key) {
     case 'letter': return filled(s.body);
+    case 'opening': return filled(s.quote);
     case 'lately': return (s.items || []).some(i => filled(i.title) || filled(i.text));
     case 'moment': return momentKind(s) !== '';
     case 'roll': return (s.photos || []).some(p => filled(p.src));
@@ -223,7 +224,25 @@ export function validateIssue(issue, { friends = [] } = {}) {
   if (on('nextStop') && !hasContent('nextStop', issue.nextStop)) warn('nextStop', 'Next stop is switched on but has no place, so it is hidden.');
   if (on('awake') && !friends.length) warn('awake', "Who's awake needs at least one friend in the friend list.");
   if (issue.moment?.youtube && !youtubeId(issue.moment.youtube)) err('moment.youtube', "That doesn't look like a YouTube link.");
+  for (const [path, hole] of placeholders(issue)) err(path, `Fill in "${hole}" before this goes out.`);
   return { errors, warnings };
+}
+
+// Draft prompts like "[how long]" left in any section that's switched on. Markdown links,
+// [text](https://…), don't count.
+const HOLE = /\[[^\]\n]{1,80}\](?!\()/;
+export function placeholders(issue) {
+  const found = [];
+  const walk = (v, path) => {
+    if (typeof v === 'string') { const m = HOLE.exec(v); if (m) found.push([path, m[0]]); }
+    else if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${path}.${i}`));
+    else if (v && typeof v === 'object') for (const [k, x] of Object.entries(v)) walk(x, path ? `${path}.${k}` : k);
+  };
+  for (const [key, section] of Object.entries(issue || {})) {
+    if (section && typeof section === 'object' && section.on === false) continue;
+    walk(section, key);
+  }
+  return found;
 }
 
 export function youtubeId(input) {

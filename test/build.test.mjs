@@ -1,4 +1,5 @@
 import { test, before, after } from 'node:test';
+// The tests use the frozen Lisbon sample in test/fixtures/content, never the real content/.
 import assert from 'node:assert/strict';
 import { mkdtemp, cp, readFile, writeFile, rm, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -24,7 +25,7 @@ before(async () => {
   tmp = await mkdtemp(path.join(tmpdir(), 'postcards-'));
   content = path.join(tmp, 'content');
   out = path.join(tmp, 'dist');
-  await cp(path.join(ROOT, 'content'), content, { recursive: true });
+  await cp(path.join(ROOT, 'test/fixtures/content'), content, { recursive: true });
   // A draft No. 02 that must not be published.
   const draft = JSON.parse(await readFile(path.join(content, 'issues/01/issue.json'), 'utf8'));
   Object.assign(draft, { number: 2, status: 'draft' });
