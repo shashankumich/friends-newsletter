@@ -1,25 +1,30 @@
 {
   "number": 1,
-  "status": "published",
-  "sample": true,
+  "status": "draft",
   "season": "Autumn 2026",
-  "date": "2026-10-09",
-  "color": "#2D3FE3",
+  "date": "2026-08-15",
+  "color": "#E9A515",
+  "opening": {
+    "on": true,
+    "quote": "That's how it goes, kids. The friends, neighbors, drinking buddies, and partners in crime you love so much when you're young, as the years go by, you just lose touch. You will be shocked, kids, when you discover how easy it is in life to part ways with people forever. That's why, when you find someone you want to keep around, *you do something about it.*",
+    "source": "Ted Mosby, How I Met Your Mother",
+    "note": "This line is why these postcards exist. So here I am, doing something about it."
+  },
   "cover": {
     "greeting": "Greetings from",
-    "place": "Lisbon",
-    "country": "Portugal",
-    "lat": 38.72,
-    "lon": -9.14,
-    "photo": "media/cover.webp",
-    "w": 1800,
-    "h": 1200,
-    "alt": "Pastel houses stacked up a hill at sunset",
-    "dek": "Ten days of hills, tiles and custard tarts, and a few things that happened before that."
+    "place": "New York City",
+    "country": "United States",
+    "lat": 40.71,
+    "lon": -74.01,
+    "photo": "",
+    "w": 0,
+    "h": 0,
+    "alt": "",
+    "dek": "New York in August, and the reason these postcards exist."
   },
   "letter": {
     "greeting": "Dear",
-    "body": "It's been a full season. Work swallowed most of the summer, so in September I took ten days off and went to Lisbon. I mostly walked uphill and ate custard tarts.\n\nThis is the first of these postcards. Every season I'll send one: what I've been up to, a few photos, and one question for you at the bottom. Please answer it. That's the part I'm most excited about.",
+    "body": "A while ago that line from *How I Met Your Mother* came back to me, and it wouldn't leave. So many of the people I love are now a flight, a time zone or a few busy years away, and I don't want to be the one who lets us drift.\n\nSo this is the first of these postcards. Every season I'll send one: what I've been up to, a few photos, and one question for you at the bottom. Please answer it. That's the part I'm most excited about.\n\nThis one comes from New York, where I spent [how long] in August. [A line or two about the trip: what you did, what surprised you, what you'll remember.]",
     "signoff": "Love,"
   },
   "lately": {
@@ -28,133 +33,92 @@
     "items": [
       {
         "tag": "Work",
-        "title": "Launched the big project",
-        "text": "Eight months of work went live in September. I slept through most of the weekend after."
+        "title": "[A headline]",
+        "text": "[A line or two]"
       },
       {
         "tag": "Home",
-        "title": "Finally nailed Mom's dal",
-        "text": "Three video calls and four attempts. Attempt four was worth it."
+        "title": "[A headline]",
+        "text": "[A line or two]"
       },
       {
-        "tag": "Body",
-        "title": "Ran my first 10K",
-        "text": "58:12. I'm told mentioning the medal is mandatory."
+        "tag": "Life",
+        "title": "[A headline]",
+        "text": "[A line or two]"
       }
     ]
   },
   "moment": {
     "on": true,
-    "kind": "video",
-    "title": "Tram 28, golden hour",
-    "video": "media/moment.mp4",
-    "poster": "media/moment-poster.webp",
-    "duration": 6,
-    "w": 1280,
-    "h": 720,
+    "kind": "photo",
+    "title": "[The moment from New York]",
+    "video": "",
+    "poster": "",
+    "duration": 0,
     "youtube": "",
     "photo": "",
-    "caption": "Graça, 7:48 pm",
-    "story": "I rode it three times in one evening to catch this light on the climb up to Graça. By the third lap the driver was waving at me."
+    "w": 0,
+    "h": 0,
+    "caption": "[Where, and what time]",
+    "story": "[The story behind it, in two or three sentences]"
   },
   "roll": {
     "on": true,
-    "title": "Ten days in Lisbon, five photos",
-    "photos": [
-      {
-        "src": "media/roll-1.webp",
-        "caption": "Miradouro at dusk",
-        "ar": 1
-      },
-      {
-        "src": "media/roll-2.webp",
-        "caption": "Pastel de nata no. 14 (I kept count)",
-        "ar": 1
-      },
-      {
-        "src": "media/roll-3.webp",
-        "caption": "Every wall here is a tile wall",
-        "ar": 1
-      },
-      {
-        "src": "media/roll-4.webp",
-        "caption": "Cascais, 30 minutes by train",
-        "ar": 1
-      },
-      {
-        "src": "media/roll-5.webp",
-        "caption": "Alfama rooftops from the castle",
-        "ar": 1
-      }
-    ]
+    "title": "New York in August",
+    "photos": []
   },
   "currently": {
-    "on": true,
+    "on": false,
     "title": "Contents of this season",
     "items": [
       {
         "label": "Reading",
-        "value": "Tomorrow, and Tomorrow, and Tomorrow",
-        "note": "Halfway through, loving it"
+        "value": "",
+        "note": ""
       },
       {
         "label": "Listening",
-        "value": "Fado on Sunday mornings",
-        "note": "Blame Lisbon"
+        "value": "",
+        "note": ""
       },
       {
         "label": "Cooking",
-        "value": "Dal, attempt no. 5",
-        "note": "Even better than no. 4"
+        "value": "",
+        "note": ""
       },
       {
         "label": "Obsessed with",
-        "value": "Ranking custard tarts in every city",
-        "note": "Lisbon leads, obviously"
+        "value": "",
+        "note": ""
       }
     ]
   },
   "nextStop": {
-    "on": true,
-    "place": "Tokyo",
-    "country": "Japan",
-    "code": "TYO",
-    "dates": "12–20 Nov",
-    "gate": "Ramen",
+    "on": false,
+    "place": "Arcadia",
+    "country": "",
+    "code": "",
+    "dates": "",
+    "gate": "",
     "line": ""
   },
   "mailbag": {
-    "on": true,
+    "on": false,
     "title": "What you said last time",
-    "question": "What's the best thing you ate this summer?",
-    "notes": [
-      {
-        "text": "A peach from a roadside stand in Yamanashi. I'm still thinking about it.",
-        "name": "Aiko",
-        "city": "Tokyo"
-      },
-      {
-        "text": "My grandma's jollof at the family reunion. Nothing else comes close.",
-        "name": "Amara",
-        "city": "Lagos"
-      },
-      {
-        "text": "Cold cherry soup by a lake. Don't knock it until you try it.",
-        "name": "Lena",
-        "city": "Berlin"
-      }
-    ]
+    "question": "",
+    "notes": []
   },
   "awake": {
     "on": true
   },
   "yourTurn": {
-    "question": "What's one small thing that made your season?",
+    "question": "Who's someone you've been meaning to catch up with?",
     "stamps": [
       "Miss you",
       "Call me",
       "Loved it",
       "Visit soon"
     ]
-  }
+  },
+  "groups": {}
 }
