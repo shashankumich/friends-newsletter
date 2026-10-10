@@ -144,18 +144,18 @@ flowchart LR
 
 ## 8. How it works technically
 
-All of this is free at the size of a friend group.
+All of this is free at the size of a friend group. The table shows what was built; [`SETUP.md`](SETUP.md) has the details.
 
-| Piece | Recommendation | Why |
+| Piece | Built as | Why |
 |---|---|---|
-| Site | Astro static site; one folder per issue (`issue.md` + photos) | Full design control, fast, plain files |
-| Hosting | Cloudflare Pages (GitHub Pages also works) | Free; Cloudflare also provides the pieces below |
-| Video | Cloudflare Stream, Bunny Stream, or unlisted YouTube | Adaptive streaming for slow connections; keeps big files out of git |
-| Replies and stamps | Small Cloudflare Worker + D1 database that also emails me each reply | Friends don't need accounts |
-| Personal links | An unguessable token per friend, resolved on the server to their name and city | Names never appear in public code |
-| Email | Buttondown sends a short teaser: cover image, two lines, a "Read No. 01" button | Good deliverability; email can't play video, so the page is the real issue |
-| Chat apps | A ready-to-paste message and link for each issue | Reaches friends on WhatsApp, LINE, KakaoTalk and the rest |
-| Privacy | Default: unlisted URLs + `noindex`. Optional: Cloudflare Access with an emailed one-time PIN (free up to 50 people) | Pick the trade-off between friction and privacy |
+| Site | A dependency-free static build (`scripts/build.mjs`); one folder per issue (`issue.json` + media) and a shared renderer used by both the build and the Studio preview | Full design control, plain files, nothing to maintain |
+| Hosting | GitHub Pages, deployed by GitHub Actions on every push to `master` | Free, and the repo is the whole system |
+| Editor | The Studio at `/studio/`: form editor with live preview, in-browser photo compression, one commit per save through the GitHub Git Data API, deploy progress, and a share panel | Under an hour per issue, from any device, with no app to install |
+| Video | Short MP4s committed with the issue (poster frame and duration made in the browser), or unlisted YouTube for anything longer | Simple; loads only when played |
+| Replies and stamps | `wa.me` and `mailto` links filled in with the friend's answer, stamps, consent and name | No server, no accounts, and replies land where conversations already happen |
+| Personal links | `?to=Name`, matched against the friend list | Greeting, map pin and From line; a greeting, not a login |
+| Email and chat | The Studio writes the WhatsApp message, a copyable designed email, a BCC `mailto` and a personal link per friend; friends' addresses stay in the browser | Reaches friends on any app; no mailing service needed to start |
+| Privacy | Unlisted URLs, `noindex` and `robots.txt` | Low friction; anyone with a link can read it |
 
 **Weight budget:** images in AVIF/WebP at 200 KB or less each, and the issue page under 2 MB before video. Videos get poster frames and load only when played.
 
@@ -165,9 +165,9 @@ All of this is free at the size of a friend group.
 
 | Phase | Scope |
 |---|---|
-| **0. Prototype** (now) | This design, with sample content. React to it. |
-| **1. First real issue** (1–2 weeks) | Astro site, issue template, friend list, private hosting, Buttondown email, reply form that emails me |
-| **2. Two-way** (next season) | Stored replies and stamps, Mailbag with consent, personal links, live "Who's awake" from the friend list, "I'm around" |
+| **0. Prototype** (done) | The design, with sample content |
+| **1. First real issue** (built) | Static site on GitHub Pages, the Studio, friend list, WhatsApp/email replies, personal links, live "Who's awake", "I'm around" |
+| **2. Two-way** (next season) | Stored replies and stamps in one inbox, Mailbag filled from replies with consent, "haven't heard from" nudges, a personal domain |
 | **3. Keepsakes** (end of year one) | Printable yearbook or print-on-demand zine, one physical postcard per friend each year, voice-note replies |
 
 ---
@@ -185,13 +185,19 @@ All of this is free at the size of a friend group.
 
 ---
 
-## 11. Open decisions
+## 11. Decisions
 
-1. **Name:** "Postcards from Shashank", or something else?
-2. **Cadence:** seasonal (4 a year) or monthly?
-3. **Privacy:** an unlisted link, or an emailed-PIN gate?
-4. **Delivery:** email, a chat-app link, or both?
-5. **Domain:** a personal domain (about $10 a year) helps email deliverability and looks nicer.
+Settled in October 2026:
+
+1. **Name:** "Postcards from Shashank".
+2. **Cadence:** seasonal, four a year.
+3. **Privacy:** unlisted link with `noindex`; no PIN gate.
+4. **Delivery:** both. Email and WhatsApp carry the link, and friends visit the site for each new issue.
+5. **Design:** postcard, editorial, scrapbook and film styles together, at the level of a high-end design studio.
+6. **Editing:** a no-code editor, the Studio, on the site itself.
+7. **Hosting:** GitHub Pages from this repository.
+
+Still open: a personal domain (about $10 a year) would look nicer and helps if the email moves to a mailing service later.
 
 ---
 

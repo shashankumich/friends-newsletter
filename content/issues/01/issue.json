@@ -26,16 +26,32 @@
     "on": true,
     "title": "Three things since we last talked",
     "items": [
-      { "tag": "Work", "title": "Launched the big project", "text": "Eight months of work went live in September. I slept through most of the weekend after." },
-      { "tag": "Home", "title": "Finally nailed Mom's dal", "text": "Three video calls and four attempts. Attempt four was worth it." },
-      { "tag": "Body", "title": "Ran my first 10K", "text": "58:12. I'm told mentioning the medal is mandatory." }
+      {
+        "tag": "Work",
+        "title": "Launched the big project",
+        "text": "Eight months of work went live in September. I slept through most of the weekend after."
+      },
+      {
+        "tag": "Home",
+        "title": "Finally nailed Mom's dal",
+        "text": "Three video calls and four attempts. Attempt four was worth it."
+      },
+      {
+        "tag": "Body",
+        "title": "Ran my first 10K",
+        "text": "58:12. I'm told mentioning the medal is mandatory."
+      }
     ]
   },
   "moment": {
     "on": true,
+    "kind": "video",
     "title": "Tram 28, golden hour",
     "video": "media/moment.mp4",
     "poster": "media/moment-poster.webp",
+    "duration": 6,
+    "w": 1280,
+    "h": 720,
     "youtube": "",
     "photo": "",
     "caption": "Graça, 7:48 pm",
@@ -45,21 +61,57 @@
     "on": true,
     "title": "Ten days in Lisbon, five photos",
     "photos": [
-      { "src": "media/roll-1.webp", "caption": "Miradouro at dusk", "ar": 1 },
-      { "src": "media/roll-2.webp", "caption": "Pastel de nata no. 14 (I kept count)", "ar": 1 },
-      { "src": "media/roll-3.webp", "caption": "Every wall here is a tile wall", "ar": 1 },
-      { "src": "media/roll-4.webp", "caption": "Cascais, 30 minutes by train", "ar": 1 },
-      { "src": "media/roll-5.webp", "caption": "Alfama rooftops from the castle", "ar": 1 }
+      {
+        "src": "media/roll-1.webp",
+        "caption": "Miradouro at dusk",
+        "ar": 1
+      },
+      {
+        "src": "media/roll-2.webp",
+        "caption": "Pastel de nata no. 14 (I kept count)",
+        "ar": 1
+      },
+      {
+        "src": "media/roll-3.webp",
+        "caption": "Every wall here is a tile wall",
+        "ar": 1
+      },
+      {
+        "src": "media/roll-4.webp",
+        "caption": "Cascais, 30 minutes by train",
+        "ar": 1
+      },
+      {
+        "src": "media/roll-5.webp",
+        "caption": "Alfama rooftops from the castle",
+        "ar": 1
+      }
     ]
   },
   "currently": {
     "on": true,
     "title": "Contents of this season",
     "items": [
-      { "label": "Reading", "value": "Tomorrow, and Tomorrow, and Tomorrow", "note": "Halfway through, loving it" },
-      { "label": "Listening", "value": "Fado on Sunday mornings", "note": "Blame Lisbon" },
-      { "label": "Cooking", "value": "Dal, attempt no. 5", "note": "Even better than no. 4" },
-      { "label": "Obsessed with", "value": "Ranking custard tarts in every city", "note": "Lisbon leads, obviously" }
+      {
+        "label": "Reading",
+        "value": "Tomorrow, and Tomorrow, and Tomorrow",
+        "note": "Halfway through, loving it"
+      },
+      {
+        "label": "Listening",
+        "value": "Fado on Sunday mornings",
+        "note": "Blame Lisbon"
+      },
+      {
+        "label": "Cooking",
+        "value": "Dal, attempt no. 5",
+        "note": "Even better than no. 4"
+      },
+      {
+        "label": "Obsessed with",
+        "value": "Ranking custard tarts in every city",
+        "note": "Lisbon leads, obviously"
+      }
     ]
   },
   "nextStop": {
@@ -76,14 +128,33 @@
     "title": "What you said last time",
     "question": "What's the best thing you ate this summer?",
     "notes": [
-      { "text": "A peach from a roadside stand in Yamanashi. I'm still thinking about it.", "name": "Aiko", "city": "Tokyo" },
-      { "text": "My grandma's jollof at the family reunion. Nothing else comes close.", "name": "Amara", "city": "Lagos" },
-      { "text": "Cold cherry soup by a lake. Don't knock it until you try it.", "name": "Lena", "city": "Berlin" }
+      {
+        "text": "A peach from a roadside stand in Yamanashi. I'm still thinking about it.",
+        "name": "Aiko",
+        "city": "Tokyo"
+      },
+      {
+        "text": "My grandma's jollof at the family reunion. Nothing else comes close.",
+        "name": "Amara",
+        "city": "Lagos"
+      },
+      {
+        "text": "Cold cherry soup by a lake. Don't knock it until you try it.",
+        "name": "Lena",
+        "city": "Berlin"
+      }
     ]
   },
-  "awake": { "on": true },
+  "awake": {
+    "on": true
+  },
   "yourTurn": {
     "question": "What's one small thing that made your season?",
-    "stamps": ["Miss you", "Call me", "Loved it", "Visit soon"]
+    "stamps": [
+      "Miss you",
+      "Call me",
+      "Loved it",
+      "Visit soon"
+    ]
   }
 }

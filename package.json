@@ -5,7 +5,9 @@
   "description": "Postcards: a seasonal newsletter for friends, with a no-code Studio editor.",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "serve": "node scripts/serve.mjs"
+    "serve": "node scripts/serve.mjs",
+    "practice": "node scripts/serve.mjs --mock-github",
+    "test": "node --test test/*.test.mjs"
   },
   "engines": { "node": ">=20" }
 }

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "postcards",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/serve.mjs", "--port", "8080", "--mock-github"],
+      "port": 8080
+    }
+  ]
+}
