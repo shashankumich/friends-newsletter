@@ -143,6 +143,52 @@ p { margin: 0 0 1em; }
   .mast-date { display: none; }
 }
 
+/* ---------- opening quote: a cold open before the cover ---------- */
+
+.op { position: relative; isolation: isolate; overflow: hidden; margin-top: clamp(22px, 3.4vw, 44px); background: var(--film); color: #F1ECE2; }
+/* A warm light leak in the corner, like the first frames of a roll. */
+.op::before {
+  content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none;
+  background: radial-gradient(60% 70% at 100% 0%, rgb(233 150 70 / .22), transparent 70%), radial-gradient(50% 60% at 0% 100%, color-mix(in oklab, var(--c) 30%, transparent), transparent 70%);
+}
+.op-in { min-height: min(84svh, 860px); display: grid; align-content: center; justify-items: center; gap: clamp(28px, 5vw, 56px); padding-block: clamp(64px, 10vw, 128px); }
+.op-fig { position: relative; margin: 0; max-width: 940px; }
+.op-quote { position: relative; margin: 0; font: italic 400 clamp(24px, 3.2vw, 44px)/1.34 var(--f-serif); letter-spacing: -.008em; text-wrap: pretty; }
+.op-quote::before {
+  content: "\201C"; position: absolute; left: -.04em; top: -.4em; z-index: -1;
+  font: 800 8em/1 var(--f-serif); color: var(--c-d);
+}
+@media (min-width: 1100px) { .op-quote::before { left: -.6em; top: -.26em; } }
+.op-quote p { margin: 0; }
+.op-quote em {
+  font-style: normal; padding-bottom: .04em;
+  background: linear-gradient(var(--c-d), var(--c-d)) no-repeat 0 100% / 100% .09em;
+}
+.op-src {
+  margin-top: clamp(20px, 3vw, 34px); display: flex; align-items: center; gap: 14px;
+  font: 500 11.5px/1.4 var(--f-mono); letter-spacing: .18em; text-transform: uppercase; color: rgb(241 236 226 / .62);
+}
+.op-src::before { content: ""; width: 34px; height: 1px; background: currentColor; }
+.op-note { display: flex; align-items: flex-start; gap: 6px; margin: 0; max-width: 940px; width: 100%; justify-content: flex-end; color: var(--c-d); }
+.op-note .hand { font-size: clamp(34px, 4.6vw, 58px); line-height: .98; transform: rotate(-3deg); transform-origin: right; text-align: right; max-width: 18em; }
+.op-arrow { flex: none; width: clamp(54px, 7vw, 92px); margin-top: .6em; }
+.op + .cover { margin-top: clamp(30px, 5vw, 64px); }
+
+/* The reveal: sentence by sentence, then who said it, then the underline, then your reply. It only
+   hides text when scripts can reveal it, and a delayed fallback shows everything regardless. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .op-line, .op-src, .op-note { opacity: 0; filter: blur(6px); animation: op-show 0s 10s forwards; }
+  .op-quote em { background-size: 0% .09em; animation: op-underline 0s 10s forwards; }
+  .op.is-in .op-line, .op.is-in .op-src, .op.is-in .op-note { opacity: 1; filter: none; transition: opacity 1.1s ease, filter 1.1s ease; }
+  .op.is-in .op-line { transition-delay: calc(var(--i) * .7s + .2s); }
+  .op.is-in .op-src { transition-delay: calc(var(--n) * .7s + .3s); }
+  .op.is-in .op-quote em { background-size: 100% .09em; transition: background-size 1.2s cubic-bezier(.6, 0, .2, 1) calc(var(--n) * .7s + .7s); }
+  .op.is-in .op-note { transition-delay: calc(var(--n) * .7s + 1.9s); }
+  .op.is-instant *, .op.is-instant { transition: none !important; }
+}
+@keyframes op-show { to { opacity: 1; filter: none; } }
+@keyframes op-underline { to { background-size: 100% .09em; } }
+
 /* ---------- cover: the large-letter postcard ---------- */
 
 .cover { position: relative; margin-top: clamp(22px, 3.4vw, 44px); }

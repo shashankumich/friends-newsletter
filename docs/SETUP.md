@@ -55,7 +55,7 @@ No. 01 is a sample: made-up friends, placeholder illustrations, and a "Sample is
 ## 2. Making an issue (the hour)
 
 1. **New issue.** It starts as a draft with your last question carried into the Mailbag, the stamps from last time, and the next colour in the palette.
-2. **Fill the sections.** Every section has an on/off switch. Aim for five or six: the cover, letter and "Your turn" are always there; pick two or three of the others.
+2. **Fill the sections.** Every section has an on/off switch. To open with a quote, switch on **Opening quote**: it plays before the cover, one sentence at a time, the words you wrap in `*asterisks*` get underlined last, and your reply appears in your handwriting with an arrow down to the cover. Aim for five or six: the cover, letter and "Your turn" are always there; pick two or three of the others.
    - Photos are shrunk in the browser (around 200 KB each, WebP) before they're saved, and re-encoding strips their location data.
    - Videos: an MP4 of 30 seconds or less from your phone, up to 40 MB. A poster frame is made for you. Videos are uploaded as they are, metadata included. For anything longer, upload to YouTube as unlisted and paste the link.
    - The preview updates as you type. Use **Preview as** to see the page the way a particular friend will, greeted by name and marked on the map.

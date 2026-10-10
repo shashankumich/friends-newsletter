@@ -136,6 +136,23 @@ test('the cover word is sized for one, two and three lines and the browser takes
   assert.match(renderIssueBody(sample(), ctx()), /class="cover-word" style="font-size:max\(40px, min\(30\.66cqi, 56cqb\)\)"/);
 });
 
+test('the opening quote comes before the cover, one sentence per line, with the reply in hand', () => {
+  const i = sample();
+  assert.doesNotMatch(renderIssueBody(i, ctx()), /data-pc-opening/); // not in the sample
+  i.opening = { on: true, quote: '""It goes, kids. You lose touch. So *you do something about it.*"', source: 'Ted Mosby', note: 'So here I am.' };
+  const html = renderIssueBody(i, ctx());
+  assert.ok(html.indexOf('data-pc-opening') < html.indexOf('class="cover wrap"'));
+  assert.equal((html.match(/class="op-line"/g) || []).length, 3);
+  assert.match(html, /style="--n:3"/);
+  assert.match(html, /<span class="op-line" style="--i:0">It goes, kids\.<\/span>/); // stray quote marks trimmed
+  assert.match(html, /<em>you do something about it\.<\/em>/);
+  assert.match(html, /<figcaption class="op-src">Ted Mosby<\/figcaption>/);
+  assert.match(html, /<p class="op-note"><span class="hand">So here I am\.<\/span>/);
+  assert.doesNotMatch(html, /href="#opening"/); // not a numbered section
+  i.opening.on = false;
+  assert.doesNotMatch(renderIssueBody(i, ctx()), /data-pc-opening/);
+});
+
 test('coordinates read like a postmark', () => {
   assert.equal(fmtCoords(38.72, -9.14), '38.72° N, 9.14° W');
   assert.equal(fmtCoords(-33.87, 151.21), '33.87° S, 151.21° E');

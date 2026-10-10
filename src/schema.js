@@ -113,6 +113,7 @@ export function blankIssue({ number, date, previous } = {}) {
     season: seasonFor(day),
     date: day,
     color: SWATCHES[(number - 1) % SWATCHES.length].hex,
+    opening: { on: false, quote: '', source: '', note: '' },
     cover: { greeting: 'Greetings from', place: '', country: '', lat: null, lon: null, photo: '', w: 0, h: 0, alt: '', dek: '' },
     letter: { greeting: 'Dear', body: '', signoff: 'Love,' },
     lately: {
@@ -242,6 +243,14 @@ export const EDITOR = [
       { path: 'season', type: 'text', label: 'Season', placeholder: 'Autumn 2026' },
       { path: 'date', type: 'date', label: 'Postmark date' },
       { path: 'color', type: 'color', label: 'Issue colour', hint: 'Every issue gets its own. It tints the cover, stamp and buttons.' },
+    ],
+  },
+  {
+    key: 'opening', label: 'Opening quote', toggle: 'opening.on', hint: 'A few lines friends read before the cover, like the epigraph of a book. It appears one sentence at a time.',
+    fields: [
+      { path: 'opening.quote', type: 'textarea', rows: 5, label: 'Quote', hint: 'Put *asterisks* around the words that matter most; they get underlined, last.' },
+      { path: 'opening.source', type: 'text', label: 'Who said it', placeholder: 'Name, and where it\'s from' },
+      { path: 'opening.note', type: 'text', label: 'Your reply to it', placeholder: 'So this is me, doing something about it.', hint: 'In your handwriting under the quote, with an arrow down to the cover.' },
     ],
   },
   {

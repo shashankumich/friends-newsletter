@@ -274,6 +274,28 @@ ${src ? `<img class="cover-photo" src="${esc(src)}" alt="${esc(c.alt || '')}"${c
 </section>`;
 }
 
+// The opening quote: a dark band before the cover, like the cold open of a film. Each sentence
+// fades in on its own, the *emphasised* words are underlined last, and the author answers in hand.
+export function quoteSentences(text) {
+  return (String(text).match(/[^.!?…]+(?:[.!?…]+["”’)*_]*\s*|$)/g) || []).map(t => t.trim()).filter(Boolean);
+}
+
+function opening(issue) {
+  const o = issue.opening || {};
+  const text = String(o.quote || '').replace(/^[\s"“”„]+|[\s"“”]+$/g, '').replace(/\s*\n+\s*/g, ' ');
+  if (o.on === false || !text) return '';
+  const lines = quoteSentences(text);
+  return `<section class="op" aria-label="Opening quote" data-pc-opening style="--n:${lines.length}">
+<div class="wrap op-in">
+<figure class="op-fig">
+<blockquote class="op-quote"><p>${lines.map((l, i) => `<span class="op-line" style="--i:${i}">${inline(l)}</span>`).join(' ')}</p></blockquote>
+${o.source ? `<figcaption class="op-src">${esc(o.source)}</figcaption>` : ''}
+</figure>
+${o.note ? `<p class="op-note"><span class="hand">${inline(o.note)}</span><svg class="op-arrow" viewBox="0 0 120 96" aria-hidden="true"><path d="M10 12c30-8 78 2 88 58" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M82 58l16 16 10-22" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></p>` : ''}
+</div>
+</section>`;
+}
+
 function intro(issue, ctx, shown) {
   const c = issue.cover || {};
   const toc = shown.map((s, i) => `<li><a href="#${s.id}"><span class="toc-no">${pad2(i + 1)}</span><span class="toc-name">${esc(s.label)}</span></a></li>`).join('');
@@ -550,6 +572,7 @@ ${issue.sample ? '<p class="sample-note"><span>Sample issue</span> Made-up frien
 <div id="top"></div>
 ${masthead(ctx, issue)}
 <main>
+${opening(issue)}
 ${cover(issue, ctx)}
 ${intro(issue, ctx, shown)}
 ${body}

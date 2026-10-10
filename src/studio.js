@@ -511,7 +511,7 @@ for (const g of EDITOR) {
 }
 const fieldDef = path => FIELDS.get(path) || FIELDS.get(String(path).replace(/\.\d+\./, '.*.'));
 const groupOf = path => fieldDef(path)?.group || String(path).split('.')[0];
-const PREVIEW_TARGET = { issue: '.mast', cover: '.cover', letter: '#letter', lately: '#lately', moment: '#moment', roll: '#roll', currently: '#currently', nextStop: '#next-stop', mailbag: '#mailbag', awake: '#awake', yourTurn: '#write-back' };
+const PREVIEW_TARGET = { issue: '.mast', opening: '.op', cover: '.cover', letter: '#letter', lately: '#lately', moment: '#moment', roll: '#roll', currently: '#currently', nextStop: '#next-stop', mailbag: '#mailbag', awake: '#awake', yourTurn: '#write-back' };
 
 function renderForm() {
   const issue = cur();
