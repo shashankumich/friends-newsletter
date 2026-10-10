@@ -277,6 +277,10 @@ p { margin: 0 0 1em; }
 .letter-sign { display: flex; flex-direction: column; margin: 34px 0 0; }
 .letter-signoff { font-style: italic; font-size: 20px; }
 .letter-name { font-size: clamp(54px, 7.6vw, 86px); line-height: .9; color: var(--c-text); transform: rotate(-4deg); transform-origin: left center; margin-top: 2px; }
+/* A group's P.S.: a note taped under the signature. */
+.letter-ps { position: relative; max-width: 520px; margin: 40px 0 0; padding: 24px 22px 18px; background: var(--note-1); color: #1D1B17; box-shadow: var(--shadow-2); --tilt: -1.4deg; transform: rotate(var(--tilt)); }
+.letter-ps p { margin: 0; font-size: 31px; line-height: 1.02; }
+.letter-ps b { font-weight: 400; color: var(--c-l); margin-right: 4px; }
 
 /* ---------- lately ---------- */
 

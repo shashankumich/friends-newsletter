@@ -1,7 +1,7 @@
 // Turns content/issues/NN/issue.json into HTML. Pure string functions with no DOM, so the
 // same module runs in the Node build and in the Studio's live preview.
 
-import { SECTIONS, isShown, pad2, momentKind, youtubeId, nextSeasons, DEFAULT_STAMPS, DEFAULT_COLOR } from './schema.js';
+import { SECTIONS, isShown, pad2, momentKind, youtubeId, nextSeasons, DEFAULT_STAMPS, DEFAULT_COLOR, audienceFriends, scopeIssue } from './schema.js';
 
 export const FONTS_URL = 'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Nanum+Pen+Script&display=swap';
 
@@ -88,6 +88,26 @@ export function colorVars(hex) {
 /* ---------- urls ---------- */
 
 export const issueDir = n => `issues/${pad2(n)}/`;
+// An issue's page for one audience: the shared page, or a friend group's own copy.
+export const audiencePath = (n, slug = '') => `${issueDir(n)}${slug ? `${slug}/` : ''}`;
+
+// Where a page's links go. Group pages link to the group's own copies, never to the shared ones.
+function links(ctx) {
+  const r = ctx.root || '';
+  const slug = ctx.group?.slug || '';
+  return {
+    home: slug ? `${r}g/${slug}/` : r || './',
+    issue: n => `${r}${audiencePath(n, slug)}`,
+    archive: slug ? `${r}archive/${slug}/` : `${r}archive/`,
+  };
+}
+
+// A render context for one audience: the shared pages (no group) or one friend group, with that
+// audience's friends only. The friend count in the intro still covers everyone.
+export function forAudience(ctx, group = null) {
+  const all = ctx.allFriends || ctx.friends || [];
+  return { ...ctx, group, allFriends: all, friends: audienceFriends(all, ctx.groups || [], group?.id || '') };
+}
 
 export function mediaUrl(issue, src, ctx = {}) {
   if (!src) return '';
@@ -187,9 +207,9 @@ const airmail = () => '<div class="airmail" aria-hidden="true"></div>';
 function masthead(ctx, issue) {
   const s = ctx.site || {};
   return `<header class="mast wrap">
-<a class="brand" href="${ctx.root || './'}"><span class="brand-word">${esc(s.title || 'Postcards')}</span><span class="brand-from">from ${esc(s.author || 'a friend')}</span></a>
+<a class="brand" href="${links(ctx).home}"><span class="brand-word">${esc(s.title || 'Postcards')}</span><span class="brand-from">from ${esc(s.author || 'a friend')}</span></a>
 ${issue ? `<p class="mast-meta"><span>No.&nbsp;${pad2(issue.number)}</span><span>${esc(issue.season)}</span><span class="mast-date">${esc(fmtDate(issue.date))}</span></p>` : ''}
-<nav class="mast-nav" aria-label="Site"><a href="${ctx.root || ''}archive/">Archive</a>${issue ? '<a class="mast-cta" href="#write-back">Write back</a>' : ''}</nav>
+<nav class="mast-nav" aria-label="Site"><a href="${links(ctx).archive}">Archive</a>${issue ? '<a class="mast-cta" href="#write-back">Write back</a>' : ''}</nav>
 </header>`;
 }
 
@@ -228,7 +248,7 @@ function intro(issue, ctx, shown) {
   const c = issue.cover || {};
   const toc = shown.map((s, i) => `<li><a href="#${s.id}"><span class="toc-no">${pad2(i + 1)}</span><span class="toc-name">${esc(s.label)}</span></a></li>`).join('');
   return `<section class="intro wrap" aria-label="Introduction">
-<div class="intro-main">${c.dek ? `<p class="dek">${inline(c.dek)}</p>` : ''}<p class="intro-reach">${reachLine(ctx.friends)}</p></div>
+<div class="intro-main">${c.dek ? `<p class="dek">${inline(c.dek)}</p>` : ''}<p class="intro-reach">${reachLine(ctx.allFriends || ctx.friends)}</p></div>
 <nav class="toc" aria-label="In this issue"><p class="toc-h">In this issue</p><ol>${toc}</ol></nav>
 </section>`;
 }
@@ -239,13 +259,15 @@ const BODY = {
   letter(issue, ctx) {
     const l = issue.letter || {};
     const where = issue.cover?.place;
+    const dearTo = ctx.group?.salutation || 'friend';
     return {
       kick: 'The letter', meta: where ? esc(where) : '', title: 'The letter', titleHidden: true,
       body: `<article class="letter">
 <p class="letter-date">${[where, fmtDate(issue.date)].filter(Boolean).map(esc).join(' · ')}</p>
-<p class="letter-dear hand"><span data-pc-dear data-greeting="${esc(l.greeting || 'Dear')}">${esc(l.greeting || 'Dear')} friend,</span></p>
+<p class="letter-dear hand"><span data-pc-dear data-greeting="${esc(l.greeting || 'Dear')}" data-fallback="${esc(dearTo)}">${esc(l.greeting || 'Dear')} ${esc(dearTo)},</span></p>
 <div class="prose letter-body">${paras(l.body)}</div>
 <p class="letter-sign"><span class="letter-signoff">${esc(l.signoff || 'Love,')}</span><span class="hand letter-name">${esc(ctx.site?.author || '')}</span></p>
+${l.ps ? `<aside class="letter-ps" aria-label="P.S."><span class="tape" aria-hidden="true"></span><p class="hand"><b>P.S.</b> ${inline(l.ps).replace(/\n/g, '<br>')}</p></aside>` : ''}
 </article>`,
     };
   },
@@ -441,12 +463,12 @@ function album(issue, ctx) {
   const slots = 4 - (list.length % 4 || 4) || 4;
   const upcoming = nextSeasons(latest.season, slots);
   while (upcoming.length < slots) upcoming.push('Coming soon');
-  const href = i => i.number === issue.number && ctx.isIssuePage ? '#top' : `${ctx.root || ''}${issueDir(i.number)}`;
+  const href = i => i.number === issue.number && ctx.isIssuePage ? '#top' : links(ctx).issue(i.number);
   return `<section class="album" id="album" aria-labelledby="h-album">
 <div class="wrap">
 <div class="album-head"><p class="rail-kick">Stamp album</p><h2 class="album-title" id="h-album">One stamp per issue</h2><p class="album-sub">Every season adds a stamp. Give it a few years and this becomes a whole album of us.</p></div>
 <ol class="stock">${list.map(i => `<li class="stock-cell${i.number === issue.number ? ' is-current' : ''}"><a href="${href(i)}"${i.number === issue.number ? ' aria-current="page"' : ''}>${stamp(i, ctx)}<span class="stock-lbl">No. ${pad2(i.number)}<br>${esc(i.season)}</span></a></li>`).join('')}${upcoming.map((s, k) => `<li class="stock-cell is-empty"><span class="slot" aria-hidden="true">${pad2(latest.number + k + 1)}</span><span class="stock-lbl">${esc(s.replace(/\s\d{4}$/, ''))}<span class="sr-only"> (coming)</span></span></li>`).join('')}</ol>
-<p class="album-more"><a href="${ctx.root || ''}archive/">Every postcard so far ${ICON.arrow}</a></p>
+<p class="album-more"><a href="${links(ctx).archive}">Every postcard so far ${ICON.arrow}</a></p>
 </div>
 </section>`;
 }
@@ -454,7 +476,7 @@ function album(issue, ctx) {
 function colophon(ctx, issue) {
   const place = issue?.cover?.place;
   return `<footer class="colo wrap">
-<p class="colo-big">${reachLine(ctx.friends)}. Replies go to ${esc(ctx.site?.author || 'me')} and nobody else.</p>
+<p class="colo-big">${reachLine(ctx.allFriends || ctx.friends)}. Replies go to ${esc(ctx.site?.author || 'me')} and nobody else.</p>
 <p>If you'd rather not get these, just say so. No hard feelings.</p>
 <p class="colo-type">Set in Bodoni Moda, Archivo, IBM Plex Mono and Nanum Pen Script.${place ? ` Posted from ${esc(place)}${issue.date ? `, ${esc(fmtDate(issue.date))}` : ''}.` : ''}</p>
 </footer>
@@ -485,7 +507,8 @@ export function pageData(issue, ctx) {
 const jsonScript = (id, data) => `<script type="application/json" id="${id}">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`;
 
 // Everything inside <body> for one issue. The Studio preview swaps this in place.
-export function renderIssueBody(issue, ctx) {
+export function renderIssueBody(fullIssue, ctx) {
+  const issue = scopeIssue(fullIssue, ctx.group?.id || '');
   const friends = ctx.friends || [];
   const shown = shownSections(issue, friends);
   const body = shown.map((def, i) => {
@@ -556,7 +579,7 @@ export function issueTitle(issue, site = {}) {
 
 export function renderIssuePage(issue, ctx) {
   const dir = issueDir(issue.number);
-  const canonical = absUrl(ctx.siteUrl, dir);
+  const canonical = absUrl(ctx.siteUrl, audiencePath(issue.number, ctx.group?.slug));
   const img = issue.card || issue.cover?.photo;
   const isCard = !!issue.card;
   const description = issue.cover?.dek || `Postcard No. ${pad2(issue.number)} from ${ctx.site?.author || 'a friend'}.`;
@@ -585,7 +608,7 @@ export function renderArchivePage(ctx) {
 ${masthead(ctx, null)}
 <main class="archive wrap">
 <header class="arch-head"><p class="rail-kick">The archive</p><h1 class="arch-title">Every postcard so far</h1><p class="arch-sub">${list.length ? `${plural(list.length, 'issue', 'issues')}, newest first.` : 'Nothing posted yet. The first postcard is on its way.'}</p></header>
-<ol class="arch-list">${list.map(i => `<li style="${colorVars(i.color)}"><a class="arch-item" href="${ctx.root || ''}${issueDir(i.number)}">
+<ol class="arch-list">${list.map(i => `<li style="${colorVars(i.color)}"><a class="arch-item" href="${links(ctx).issue(i.number)}">
 ${stamp(i, ctx, 'arch-stamp')}
 <span class="arch-text"><span class="arch-meta">No. ${pad2(i.number)} · ${esc(i.season)}</span><span class="arch-place"><em>${esc(i.cover?.greeting || 'Greetings from')}</em> ${esc(i.cover?.place || '')}</span>${i.cover?.dek ? `<span class="arch-dek">${inline(i.cover.dek)}</span>` : ''}</span>
 <span class="arch-go" aria-hidden="true">${ICON.arrow}</span></a></li>`).join('')}</ol>
@@ -594,7 +617,7 @@ ${colophon(ctx, null)}`;
   return renderPage({
     ctx, title: `Archive · ${ctx.site?.title || 'Postcards'} from ${ctx.site?.author || 'a friend'}`,
     description: ctx.site?.description || '', color: latest?.color || DEFAULT_COLOR,
-    canonical: absUrl(ctx.siteUrl, 'archive/'), bodyClass: 'is-archive', body,
+    canonical: absUrl(ctx.siteUrl, ctx.group ? `archive/${ctx.group.slug}/` : 'archive/'), bodyClass: 'is-archive', body,
   });
 }
 

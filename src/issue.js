@@ -62,7 +62,7 @@ const fromLine = me => (me ? (me.city ? `${me.name}, ${me.city}` : me.name) : ''
 
 function personalise(doc, data, me) {
   doc.querySelectorAll('[data-pc-dear]').forEach(n => {
-    n.textContent = `${n.dataset.greeting || 'Dear'} ${me ? me.name : 'friend'},`;
+    n.textContent = `${n.dataset.greeting || 'Dear'} ${me ? me.name : n.dataset.fallback || 'friend'},`;
   });
 }
 

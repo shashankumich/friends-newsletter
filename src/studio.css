@@ -306,9 +306,32 @@ textarea.st-input { resize: vertical; min-height: 64px; }
 .st-friend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; padding: 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--paper); }
 .st-friend > * { min-width: 0; }
 .st-private .st-input { background: color-mix(in oklab, var(--warn-bg) 45%, var(--field)); }
-.st-friend-x { display: flex; align-items: flex-end; justify-content: flex-end; }
+.st-friend-x { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
 @media (max-width: 560px) { .st-friend { grid-template-columns: minmax(0, 1fr); } }
-@media (min-width: 760px) { .st-friend { grid-template-columns: 1.1fr 1.4fr 1.3fr; } .st-friend-x { grid-column: auto; } }
+@media (min-width: 760px) { .st-friend { grid-template-columns: 1.1fr 1.4fr 1.3fr; } }
+
+.st-groups { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 10px; }
+.st-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; padding: 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--card); border-left: 4px solid var(--c-text); }
+.st-group > * { min-width: 0; }
+.st-group-meta { grid-column: 1 / -1; margin: 0; }
+.st-group-meta code { font: 500 12px/1.4 var(--f-mono); word-break: break-all; color: var(--ink-2); }
+.st-group-add { margin-bottom: 8px; }
+.st-dear { flex-wrap: nowrap; }
+.st-dear > span { font: italic 400 17px/1 var(--f-serif); color: var(--ink-2); }
+@media (max-width: 560px) { .st-group { grid-template-columns: minmax(0, 1fr); } }
+.st-fgroups { grid-column: 1 / -1; margin: 0; padding: 0; border: 0; min-width: 0; }
+.st-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.st-chip { position: relative; cursor: pointer; }
+.st-chip input { position: absolute; opacity: 0; }
+.st-chip span { display: inline-block; padding: 6px 12px; border: 1px solid var(--rule-2); border-radius: 999px; background: var(--field); font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.st-chip input:checked + span { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.st-chip input:focus-visible + span { outline: 2px solid var(--c-text); outline-offset: 2px; }
+.st-ps { display: grid; gap: 10px; margin-top: 8px; }
+.st-label-sub { font-size: 12px; }
+.st-label-sub em { font: italic 400 13px/1 var(--f-serif); }
+.st-aud { margin: 0 0 16px; }
+.st-seg-wrap { display: flex; flex-wrap: wrap; border-radius: 14px; }
+.st-seg-wrap button small { font: 500 11px/1 var(--f-mono); color: var(--ink-3); margin-left: 3px; }
 
 /* ---------- toasts ---------- */
 
