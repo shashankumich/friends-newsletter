@@ -117,7 +117,7 @@ before(async () => {
   await writeFile(path.join(content, 'groups.json'), JSON.stringify(groups));
   await writeFile(path.join(content, 'friends.json'), JSON.stringify(friends));
   await writeFile(path.join(content, 'issues/01/issue.json'), JSON.stringify(issue()));
-  await build({ contentDir: content, outDir: out, siteUrl: 'https://example.github.io/friends-newsletter', log: () => {} });
+  await build({ contentDir: content, outDir: out, siteUrl: 'https://example.github.io/friends-newsletter', passcode: '', log: () => {} });
 });
 after(() => rm(tmp, { recursive: true, force: true }));
 

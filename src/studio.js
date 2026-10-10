@@ -9,6 +9,7 @@ import { GitHub, waitForDeploy } from './github.js';
 import { compressImage, videoInfo, socialCard } from './media.js';
 import { issueUrl, groupLink, whatsappText, emailParts, bccMailto, personalLinks } from './share.js';
 import { waLink } from './links.js';
+import { deriveKey, unseal } from './seal.js';
 
 const root = document.getElementById('studio');
 const V = root.dataset.v;
@@ -47,6 +48,7 @@ const KEY = {
   repo: 'pc.studio.repo',
   api: 'pc.studio.api',
   contacts: 'pc.studio.contacts',
+  passcode: 'pc.studio.passcode',
   prefs: 'pc.studio.prefs',
   work: () => `pc.studio.work:${S.repo}@${S.branch}`,
 };
@@ -1013,6 +1015,40 @@ function audiences() {
   return list;
 }
 
+/* ---------- passcode ---------- */
+// The site's passcode lives in the SITE_PASSCODE secret on GitHub, which the Studio can't read. You
+// type it here once per device; it's checked against the live site and added to your messages.
+
+async function liveSeal() {
+  if (S.liveSeal !== undefined) return S.liveSeal;
+  try {
+    const r = await fetch(`${siteBase()}/build.json?t=${Date.now()}`, { cache: 'no-store' });
+    S.liveSeal = r.ok ? (await r.json()).sealed || null : null;
+  } catch {
+    S.liveSeal = null;
+  }
+  return S.liveSeal;
+}
+
+// 'open' (the site has no passcode), 'ok', 'wrong' or 'missing'.
+async function passcodeState(pass = store.get(KEY.passcode) || '') {
+  const seal = await liveSeal();
+  if (!seal) return 'open';
+  if (!pass) return 'missing';
+  try {
+    return (await unseal(await deriveKey(pass, seal.salt), seal.check)) === 'postcards' ? 'ok' : 'wrong';
+  } catch {
+    return 'wrong';
+  }
+}
+
+const PASS_NOTE = {
+  open: "The live site isn't passcode-protected right now, so messages go out without one.",
+  ok: '✓ Matches the live site. It goes into every WhatsApp and email message.',
+  wrong: "✗ That's not the live site's passcode. Check the SITE_PASSCODE secret on GitHub.",
+  missing: 'The live site is passcode-protected. Type the passcode so your messages include it.',
+};
+
 function openShare(key = S.shareKey) {
   const all = audiences();
   const aud = all.find(a => a.key === key) || all[0];
@@ -1026,11 +1062,12 @@ function openShare(key = S.shareKey) {
   const book = contacts();
   const emails = aud.friends.map(f => book[f.name]?.email).filter(Boolean);
   const img = issue.card || issue.cover?.photo;
-  const parts = emailParts({ site, issue, url, imageUrl: img ? `${mediaBase}${img}` : '', name: g?.salutation || '' });
-  const bcc = bccMailto({ emails, site, issue, url, self: site.reply?.email });
-  const rows = personalLinks({ friends: aud.friends, contacts: book, siteUrl: base, site, issue, slug: g?.slug });
+  const passcode = S.passOk ? store.get(KEY.passcode) || '' : '';
+  const parts = emailParts({ site, issue, url, imageUrl: img ? `${mediaBase}${img}` : '', name: g?.salutation || '', passcode });
+  const bcc = bccMailto({ emails, site, issue, url, self: site.reply?.email, passcode });
+  const rows = personalLinks({ friends: aud.friends, contacts: book, siteUrl: base, site, issue, slug: g?.slug, passcode });
   Object.assign(clip, {
-    wa: whatsappText({ site, issue, url, name: g?.salutation || '' }), subject: parts.subject, html: parts.html, text: parts.text,
+    wa: whatsappText({ site, issue, url, name: g?.salutation || '', passcode }), subject: parts.subject, html: parts.html, text: parts.text,
     emails: emails.join(', '), glink: g ? groupLink(base, g.slug) : '',
   });
   const live = issue.status === 'published';
@@ -1039,6 +1076,8 @@ function openShare(key = S.shareKey) {
 <div class="st-db st-share">
 ${all.length > 1 ? `<div class="st-aud"><span class="st-label">Send to</span><div class="st-seg st-seg-wrap" role="radiogroup" aria-label="Send to">${all.map(a => `<button type="button" role="radio" aria-checked="${a.key === aud.key}" data-act="share-aud" data-key="${esc(a.key)}">${esc(a.label)} <small>${a.friends.length}</small></button>`).join('')}</div></div>` : ''}
 ${live ? `<p class="st-ready"><span aria-hidden="true">✓</span> Live at <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></p>` : '<p class="st-alert">This issue is still a draft. The links below start working once you publish it.</p>'}
+${S.passState === 'ok' ? `<p class="st-muted">🔑 The site is passcode-protected, so every message below includes the passcode <b>${esc(store.get(KEY.passcode))}</b>.</p>`
+    : S.passState === 'missing' || S.passState === 'wrong' ? `<p class="st-alert">The site is passcode-protected, but ${S.passState === 'wrong' ? "the passcode saved here doesn't match it" : "this device doesn't know the passcode yet"}, so it's left out of the messages. <button type="button" class="st-link" data-act="settings">Add it in Settings</button></p>` : ''}
 ${g ? `<section class="st-share-s"><h3><span>★</span> ${esc(g.name)} link</h3>
 <p class="st-muted">Pin it in the ${esc(g.name)} group chat. It always opens the newest postcard, greeting them as "${esc(g.salutation || g.name)}", with only this group on the map.</p>
 <div class="st-row"><input class="st-input" value="${esc(clip.glink)}" readonly aria-label="${esc(g.name)} link"><button type="button" class="st-btn st-btn-quiet" data-act="copy" data-key="glink">Copy</button></div>
@@ -1247,6 +1286,9 @@ function openSettings() {
 <h3 class="st-h3">Replies</h3>
 <p class="st-muted">Friends reply by WhatsApp or email in one tap. These go into the page so the buttons work, so anyone with the link can see them.</p>
 <div class="st-grid">${f('reply.whatsapp', 'WhatsApp number', 'International format. Spaces and + are fine.', 'tel', '+44 7700 900123')}${f('reply.email', 'Email address', '', 'email', 'you@example.com')}</div>
+<h3 class="st-h3">Passcode</h3>
+<p class="st-muted">Friends type it once to open the site. The site's passcode is the <b>SITE_PASSCODE</b> secret on GitHub (Settings → Secrets and variables → Actions); change it there, then run the deploy again. Type it here too so your messages include it. It's saved on this device only.</p>
+<div class="st-field"><label class="st-label" for="set-passcode">Passcode</label><input class="st-input" id="set-passcode" data-local-pass value="${esc(store.get(KEY.passcode) || '')}" autocomplete="off" autocapitalize="none" spellcheck="false"><small class="st-hint" id="st-pass-note">Checking the live site…</small></div>
 <h3 class="st-h3">Address</h3>
 <div class="st-grid">${f('baseUrl', 'Site address', 'Leave empty to use the GitHub Pages address. Set it if you add your own domain.', 'url', siteBase())}</div>
 <h3 class="st-h3">Account</h3>
@@ -1254,6 +1296,12 @@ function openSettings() {
 <div class="st-row"><button type="button" class="st-btn st-btn-quiet" data-act="sign-out">Sign out on this device</button></div>
 </div>
 <footer class="st-df"><button type="button" class="st-btn st-btn-primary" data-act="close">Done</button></footer>`);
+  passcodeState().then(state => {
+    S.passState = state;
+    S.passOk = state === 'ok';
+    const note = $('#st-pass-note');
+    if (note) note.textContent = PASS_NOTE[state];
+  });
 }
 
 /* ---------- dialog ---------- */
@@ -1364,7 +1412,11 @@ const ACT = {
   },
   friends: () => openFriends(),
   settings: () => openSettings(),
-  share: () => openShare(),
+  share: async () => {
+    S.passState = await passcodeState();
+    S.passOk = S.passState === 'ok';
+    openShare();
+  },
   save: () => save(),
   publish: () => openPublish(),
   'do-publish': () => publish(),
@@ -1576,6 +1628,17 @@ function wireApp() {
       S.groups[Number(gi.dataset.groupI)][e.target.dataset.gr] = e.target.value;
       updateStatus();
       persist();
+      return;
+    }
+    if (e.target.matches('[data-local-pass]')) {
+      store.set(KEY.passcode, e.target.value.trim());
+      clearTimeout(S.passTimer);
+      S.passTimer = setTimeout(async () => {
+        S.passState = await passcodeState(e.target.value.trim());
+        S.passOk = S.passState === 'ok';
+        const note = $('#st-pass-note');
+        if (note) note.textContent = PASS_NOTE[S.passState];
+      }, 350);
       return;
     }
     const sp = e.target.dataset.site;

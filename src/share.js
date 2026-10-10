@@ -21,16 +21,18 @@ export const groupLink = (siteUrl, slug) => `${String(siteUrl || '').replace(/\/
 const headline = issue => `${issue.cover?.greeting || 'Greetings from'} ${issue.cover?.place || ''}`.trim();
 const label = (site, issue) => `${site.title || 'Postcards'} No. ${pad2(issue.number)}`;
 
-export function whatsappText({ site, issue, url, name = '' }) {
+// `passcode`, when the site is sealed, goes right under the link so it's easy to copy.
+export function whatsappText({ site, issue, url, name = '', passcode = '' }) {
   return [
     `${name ? `Hi ${name}! ` : ''}✉️ ${label(site, issue)} is here: ${headline(issue)}.`,
     issue.cover?.dek ? `\n${issue.cover.dek}` : '',
     `\n${url}`,
+    passcode ? `🔑 Passcode: *${passcode}*` : '',
     "\nIt's a three-minute read, and there's a question for you at the end.",
   ].join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
-export function emailParts({ site, issue, url, imageUrl = '', name = '' }) {
+export function emailParts({ site, issue, url, imageUrl = '', name = '', passcode = '' }) {
   const subject = `${label(site, issue)}: ${headline(issue)}`;
   const author = site.author || '';
   const text = [
@@ -40,6 +42,7 @@ export function emailParts({ site, issue, url, imageUrl = '', name = '' }) {
     issue.cover?.dek || '',
     '',
     `Read it here: ${url}`,
+    ...(passcode ? [`Passcode: ${passcode}`] : []),
     '',
     "It's a three-minute read, and there's a question for you at the end. Reply to this email or on WhatsApp, whichever's easier.",
     '',
@@ -59,6 +62,7 @@ ${imageUrl ? `<tr><td style="padding:16px 28px 0;"><a href="${esc(url)}"><img sr
 <tr><td style="padding:22px 28px 0;font:400 34px/1.1 ${serif};color:#151413;">${esc(headline(issue))}</td></tr>
 ${issue.cover?.dek ? `<tr><td style="padding:12px 28px 0;font:italic 400 19px/1.45 ${serif};color:#55514A;">${esc(issue.cover.dek)}</td></tr>` : ''}
 <tr><td style="padding:24px 28px 0;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:${p.c};border-radius:999px;"><a href="${esc(url)}" style="display:inline-block;padding:14px 24px;font:700 13px/1 ${sans};letter-spacing:2px;text-transform:uppercase;color:${p.onC};text-decoration:none;">Read No. ${pad2(issue.number)} &rarr;</a></td></tr></table></td></tr>
+${passcode ? `<tr><td style="padding:14px 28px 0;font:500 13px/1.4 ${mono};letter-spacing:1px;color:#55514A;">PASSCODE &nbsp;<b style="font-size:16px;letter-spacing:2px;color:#151413;">${esc(passcode)}</b></td></tr>` : ''}
 <tr><td style="padding:22px 28px 0;font:400 15px/1.55 ${sans};color:#55514A;">It's a three-minute read, and there's a question for you at the end. Reply to this email or on WhatsApp, whichever's easier.</td></tr>
 <tr><td style="padding:20px 28px 28px;font:400 17px/1.4 ${serif};color:#151413;">${esc(issue.letter?.signoff || 'Love,')}<br>${esc(author)}</td></tr>
 </table>
@@ -67,26 +71,26 @@ ${issue.cover?.dek ? `<tr><td style="padding:12px 28px 0;font:italic 400 19px/1.
 }
 
 // One mailto with everyone in BCC, so friends don't see each other's addresses.
-export function bccMailto({ emails, site, issue, url, self = '' }) {
-  const { subject, text } = emailParts({ site, issue, url });
+export function bccMailto({ emails, site, issue, url, self = '', passcode = '' }) {
+  const { subject, text } = emailParts({ site, issue, url, passcode });
   const href = mailLink({ to: self, bcc: emails, subject, body: text });
   return { href, length: href.length, tooLong: href.length > MAILTO_LIMIT, count: emails.length };
 }
 
 // contacts: { [friendName]: { email, whatsapp } }, kept only in the browser.
 // `slug` points the links at one friend group's copy of the issue.
-export function personalLinks({ friends, contacts = {}, siteUrl, site, issue, slug = '' }) {
+export function personalLinks({ friends, contacts = {}, siteUrl, site, issue, slug = '', passcode = '' }) {
   return friends.map(f => {
     const c = contacts[f.name] || {};
     const url = issueUrl(siteUrl, issue.number, f.name, slug);
-    const { subject, text } = emailParts({ site, issue, url, name: f.name });
+    const { subject, text } = emailParts({ site, issue, url, name: f.name, passcode });
     return {
       name: f.name,
       city: f.city || '',
       url,
       email: c.email || '',
       whatsapp: phoneDigits(c.whatsapp),
-      wa: waLink(c.whatsapp, whatsappText({ site, issue, url, name: f.name })),
+      wa: waLink(c.whatsapp, whatsappText({ site, issue, url, name: f.name, passcode })),
       mail: c.email ? mailLink({ to: c.email, subject, body: text }) : '',
     };
   });

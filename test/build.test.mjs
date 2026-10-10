@@ -32,7 +32,7 @@ before(async () => {
   draft.cover.place = 'Secret draft place';
   await cp(path.join(content, 'issues/01'), path.join(content, 'issues/02'), { recursive: true });
   await writeFile(path.join(content, 'issues/02/issue.json'), JSON.stringify(draft));
-  await build({ contentDir: content, outDir: out, siteUrl: SITE, sha: 'abc123', log: () => {} });
+  await build({ contentDir: content, outDir: out, siteUrl: SITE, sha: 'abc123', passcode: '', log: () => {} });
 });
 after(() => rm(tmp, { recursive: true, force: true }));
 

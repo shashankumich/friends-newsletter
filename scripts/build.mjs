@@ -6,6 +6,8 @@
 //   /studio/        the no-code editor
 //   For each friend group: /issues/NN/<slug>/, /archive/<slug>/ and /g/<slug>/ (always the latest)
 // Usage: node scripts/build.mjs [--out dist] [--content content] [--site-url https://…]
+// With SITE_PASSCODE set (a GitHub Actions secret), every issue and archive page is sealed: its
+// content is encrypted and a passcode gate opens it in the browser.
 
 import { readFile, writeFile, mkdir, rm, cp, readdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -13,7 +15,8 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { pad2, validateIssue, validateGroups, momentKind } from '../src/schema.js';
-import { renderIssuePage, renderArchivePage, renderNoticePage, forAudience, FONTS_URL, absUrl } from '../src/render.js';
+import { renderIssuePage, renderArchivePage, renderNoticePage, renderGate, forAudience, FONTS_URL, absUrl } from '../src/render.js';
+import { deriveKey, seal, sealSalt, normalizePasscode } from '../src/seal.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = path.join(ROOT, 'src');
@@ -92,6 +95,7 @@ export async function build({
   outDir = path.join(ROOT, 'dist'),
   siteUrl = process.env.SITE_URL || '',
   sha = process.env.GITHUB_SHA || '',
+  passcode = process.env.SITE_PASSCODE || '',
   log = console.log,
 } = {}) {
   const content = await loadContent(contentDir);
@@ -112,24 +116,34 @@ export async function build({
     await mkdir(path.dirname(path.join(outDir, rel)), { recursive: true });
     await writeFile(path.join(outDir, rel), html);
   };
+  // Sealing keeps the <head> (title and link-preview tags) and encrypts everything in <body>.
+  const salt = sealSalt(site.repo);
+  const key = normalizePasscode(passcode) ? await deriveKey(passcode, salt) : null;
+  const sealed = async (html, c) => {
+    if (!key) return html;
+    const body = /<body([^>]*)>\n([\s\S]*)\n<\/body>/.exec(html);
+    const gateScripts = `<script>try{localStorage.getItem('pc.key')&&document.documentElement.classList.add('pc-has-key')}catch(e){}</script>\n<script type="module" src="${c.root || ''}assets/gate.js?v=${v}"></script>\n</head>`;
+    return html.replace('</head>', gateScripts).replace(body[0], `<body${body[1]} data-sealed>\n${renderGate(c, await seal(key, body[2], salt))}\n</body>`);
+  };
+  const page = async (rel, c, render) => write(rel, await sealed(render(c), c));
   const comingSoon = c => renderNoticePage(c, { title: 'Postcards', heading: 'The first postcard is on its way.', text: `${site.author || 'Someone'} is writing it now. Check back soon.` });
 
   for (const issue of published) {
     const dir = `issues/${pad2(issue.number)}`;
-    await write(`${dir}/index.html`, renderIssuePage(issue, { ...ctx, root: '../../' }));
-    for (const g of groups) await write(`${dir}/${g.slug}/index.html`, renderIssuePage(issue, { ...forAudience(shared, g), root: '../../../' }));
+    await page(`${dir}/index.html`, { ...ctx, root: '../../' }, c => renderIssuePage(issue, c));
+    for (const g of groups) await page(`${dir}/${g.slug}/index.html`, { ...forAudience(shared, g), root: '../../../' }, c => renderIssuePage(issue, c));
     const media = path.join(contentDir, 'issues', pad2(issue.number), 'media');
     if (existsSync(media)) await cp(media, path.join(outDir, dir, 'media'), { recursive: true });
   }
 
   const latest = published.at(-1);
-  await write('index.html', latest ? renderIssuePage(latest, { ...ctx, root: '' }) : comingSoon({ ...ctx, root: '' }));
-  await write('archive/index.html', renderArchivePage({ ...ctx, root: '../' }));
+  await page('index.html', { ...ctx, root: '' }, c => (latest ? renderIssuePage(latest, c) : comingSoon(c)));
+  await page('archive/index.html', { ...ctx, root: '../' }, c => renderArchivePage(c));
   for (const g of groups) {
     const gc = forAudience(shared, g);
-    await write(`archive/${g.slug}/index.html`, renderArchivePage({ ...gc, root: '../../' }));
+    await page(`archive/${g.slug}/index.html`, { ...gc, root: '../../' }, c => renderArchivePage(c));
     // A link to pin in the group chat: always the newest issue.
-    await write(`g/${g.slug}/index.html`, latest ? renderIssuePage(latest, { ...gc, root: '../../' }) : comingSoon({ ...gc, root: '../../' }));
+    await page(`g/${g.slug}/index.html`, { ...gc, root: '../../' }, c => (latest ? renderIssuePage(latest, c) : comingSoon(c)));
   }
 
   await mkdir(path.join(outDir, 'issues'), { recursive: true });
@@ -155,11 +169,13 @@ export async function build({
   await writeFile(path.join(outDir, '.nojekyll'), '');
   await writeFile(path.join(outDir, 'build.json'), `${JSON.stringify({
     sha, builtAt: new Date().toISOString(), siteUrl, issues: published.map(i => ({ number: i.number, url: absUrl(siteUrl, `issues/${pad2(i.number)}/`) })),
+    // Lets the Studio check that the passcode it puts in messages matches the live site.
+    sealed: key ? { salt, check: await seal(key, 'postcards', salt) } : null,
   }, null, 2)}\n`);
 
   const drafts = all.filter(i => i.status !== 'published').map(i => i.number);
-  log(`Built ${published.length} published issue${published.length === 1 ? '' : 's'}${groups.length ? ` for ${groups.length + 1} audiences` : ''}${drafts.length ? ` (skipped draft${drafts.length === 1 ? '' : 's'} ${drafts.map(pad2).join(', ')})` : ''} into ${path.relative(process.cwd(), outDir) || '.'}/${siteUrl ? ` for ${siteUrl}` : ''}`);
-  return { published: published.map(i => i.number), drafts, outDir, v, siteUrl };
+  log(`Built ${published.length} published issue${published.length === 1 ? '' : 's'}${groups.length ? ` for ${groups.length + 1} audiences` : ''}${key ? ', sealed with the passcode' : ''}${drafts.length ? ` (skipped draft${drafts.length === 1 ? '' : 's'} ${drafts.map(pad2).join(', ')})` : ''} into ${path.relative(process.cwd(), outDir) || '.'}/${siteUrl ? ` for ${siteUrl}` : ''}`);
+  return { published: published.map(i => i.number), drafts, outDir, v, siteUrl, sealed: !!key };
 }
 
 function args(argv) {

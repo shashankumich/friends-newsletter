@@ -674,6 +674,30 @@ ${colophon(ctx, null)}`;
   });
 }
 
+// What a sealed page shows before the passcode: an envelope with a wax seal in the issue's colour.
+// `payload` is the encrypted page; gate.js opens it.
+export function renderGate(ctx, payload) {
+  const s = ctx.site || {};
+  const author = esc(s.author || 'I');
+  return `${airmail()}
+<main class="gate wrap">
+<div class="gate-card">
+<div class="gate-env" aria-hidden="true"><span class="gate-flap"></span><span class="gate-seal">${esc((s.title || 'Postcards').trim()[0] || 'P')}</span><span class="gate-stamp">Par avion</span></div>
+<p class="rail-kick">${esc(s.title || 'Postcards')} from ${author}</p>
+<h1 class="gate-title">A postcard for you</h1>
+<p class="gate-text">It's sealed for friends. The passcode is in the message ${author} sent you.</p>
+<form class="gate-form" data-pc-gate>
+<label class="sr-only" for="pc-pass">Passcode</label>
+<input id="pc-pass" class="gate-input" name="passcode" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="passcode" required>
+<button class="btn btn-c" type="submit">Open it</button>
+</form>
+<p class="gate-status" role="status" data-pc-gate-status></p>
+<noscript><p class="gate-text">Switch on JavaScript to open this postcard.</p></noscript>
+</div>
+</main>
+<script type="application/json" id="pc-sealed">${JSON.stringify(payload).replace(/</g, '\\u003c')}</script>`;
+}
+
 export function renderNoticePage(ctx, { title, heading, text, link }) {
   const body = `${airmail()}
 ${masthead(ctx, null)}

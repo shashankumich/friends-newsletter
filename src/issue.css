@@ -662,6 +662,41 @@ p { margin: 0 0 1em; }
 .notice { padding-block: clamp(64px, 10vw, 140px); }
 .notice-text { margin-bottom: 30px; text-transform: none; letter-spacing: .02em; font-size: 15px; max-width: 46ch; }
 
+/* ---------- the passcode gate: a sealed envelope ---------- */
+
+.gate { min-height: calc(100svh - 10px); display: grid; place-items: center; padding-block: 48px 64px; }
+.gate-card { width: 100%; max-width: 470px; display: grid; justify-items: center; gap: 14px; text-align: center; }
+.pc-has-key .gate-card { visibility: hidden; } /* a returning friend: the page opens before they see the gate */
+.gate-env {
+  position: relative; width: min(240px, 70vw); aspect-ratio: 1.6; margin-bottom: 22px; background: var(--object); transform: rotate(-3deg);
+  border: 7px solid transparent; border-image: repeating-linear-gradient(-45deg, var(--red) 0 10px, var(--object) 10px 15px, var(--navy) 15px 25px, var(--object) 25px 30px) 7;
+  box-shadow: 0 2px 3px rgb(30 20 0 / .12), 0 22px 40px -18px rgb(30 20 0 / .45);
+}
+.gate-flap { position: absolute; inset: 0; background: #EDE6D8; clip-path: polygon(0 0, 100% 0, 50% 62%); filter: drop-shadow(0 1px 0 rgb(0 0 0 / .14)); }
+.gate-seal {
+  position: absolute; left: 50%; top: 62%; width: 58px; aspect-ratio: 1; translate: -50% -50%; border-radius: 50%;
+  display: grid; place-items: center; font: italic 500 28px/1 var(--f-serif); color: var(--on-c);
+  background: radial-gradient(circle at 35% 30%, color-mix(in oklab, var(--c) 70%, #FFFFFF), var(--c) 55%, var(--c-deep));
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--c) 85%, #000000), 0 3px 8px rgb(0 0 0 / .35);
+}
+.gate-stamp {
+  position: absolute; right: 8px; top: 8px; padding: 3px 6px; background: var(--navy); color: #FFFFFF; transform: rotate(4deg);
+  font: 600 8.5px/1 var(--f-mono); letter-spacing: .14em; text-transform: uppercase;
+}
+.gate-title { margin: 4px 0 2px; font: 400 clamp(40px, 9vw, 60px)/1 var(--f-serif); letter-spacing: -.02em; }
+.gate-text { margin: 0; max-width: 34ch; font: 400 16px/1.55 var(--f-sans); color: var(--ink-2); }
+.gate-form { display: flex; gap: 8px; width: 100%; margin-top: 14px; }
+.gate-input {
+  flex: 1; min-width: 0; min-height: 50px; padding: 0 20px; border: 1.5px solid var(--ink); border-radius: 999px; background: var(--card); color: var(--ink);
+  font: 500 17px/1 var(--f-mono); letter-spacing: .1em;
+}
+.gate-input::placeholder { color: var(--ink-3); letter-spacing: .06em; }
+.gate-input:focus-visible { outline: 2px solid var(--c-text); outline-offset: 3px; }
+.gate-form .btn { min-height: 50px; }
+.gate-form.is-wrong { animation: shake .42s cubic-bezier(.36, .07, .19, .97); }
+@keyframes shake { 20%, 60% { translate: -8px 0; } 40%, 80% { translate: 8px 0; } }
+.gate-status { min-height: 1.5em; margin: 0; font: 400 13px/1.5 var(--f-mono); color: var(--ink-2); }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
