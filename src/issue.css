@@ -147,7 +147,7 @@ p { margin: 0 0 1em; }
 
 .cover { position: relative; margin-top: clamp(22px, 3.4vw, 44px); }
 .cover-card {
-  position: relative; isolation: isolate; container-type: inline-size; overflow: hidden;
+  position: relative; isolation: isolate; container-type: size; overflow: hidden;
   aspect-ratio: 4 / 5; display: grid; place-items: center;
   background: var(--c); color: #FFFFFF; border: clamp(8px, 1.3vw, 16px) solid var(--object);
   box-shadow: var(--shadow-2);
@@ -167,7 +167,7 @@ p { margin: 0 0 1em; }
 }
 .cover-word {
   display: inline-grid; max-width: 100%;
-  font: 900 clamp(48px, calc(86cqi / (var(--n) * .5)), calc(56cqi / var(--lines)))/.86 var(--f-sans);
+  font: 900 18cqi/.86 var(--f-sans); /* the renderer sets a fitted size inline */
   font-stretch: 62%; text-transform: uppercase; letter-spacing: 0; text-wrap: balance;
 }
 .cw { grid-area: 1 / 1; padding: 0 .06em .08em 0; }

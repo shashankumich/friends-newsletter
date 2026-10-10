@@ -227,17 +227,47 @@ ${body}
 
 /* ---------- cover + intro ---------- */
 
+// Advance widths, in em, of the cover lettering (Archivo 900 at its narrowest width, uppercase),
+// measured in the browser. They let the renderer size any place name to fill the card.
+const CAP_W = { A: .53, B: .5, C: .51, D: .51, E: .46, F: .4, G: .54, H: .51, I: .26, J: .45, K: .51, L: .43, M: .71, N: .52, O: .55, P: .49, Q: .55, R: .51, S: .47, T: .48, U: .5, V: .49, W: .73, X: .5, Y: .48, Z: .48, ' ': .11, '-': .24, '.': .22, "'": .21, '&': .57 };
+const capsWidth = s => [...String(s).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')]
+  .reduce((t, c) => t + (CAP_W[c] ?? (/\d/.test(c) ? .44 : .5)), 0);
+
+// The narrowest the widest line can be when `words` are split into `k` lines.
+function widestLine(words, k) {
+  let best = Infinity;
+  const line = (a, b) => capsWidth(words.slice(a, b).join(' '));
+  const walk = (start, left, worst) => {
+    if (left === 1) { best = Math.min(best, Math.max(worst, line(start, words.length))); return; }
+    for (let end = start + 1; end <= words.length - left + 1; end++) walk(end, left - 1, Math.max(worst, line(start, end)));
+  };
+  walk(0, k, 0);
+  return best;
+}
+
+// A font-size that fills the postcard: for one, two and three lines, the largest size that fits
+// both the card's width (cqi) and its height (cqb); the browser takes the biggest. Wrapping then
+// falls into that many lines on its own, so a tall phone card and a wide desktop card each get
+// their best layout ("NEW / YORK / CITY" on a phone, "NEW YORK / CITY" on a laptop).
+export function coverFontSize(place) {
+  const words = String(place).trim().split(/\s+/).filter(Boolean);
+  const r2 = n => Math.round(n * 100) / 100;
+  const terms = [];
+  for (let k = 1; k <= Math.min(words.length, 3); k++) {
+    terms.push(`min(${r2(88 / (widestLine(words, k) + 0.14))}cqi, ${r2(56 / k)}cqb)`);
+  }
+  return `max(40px, ${terms.join(', ')})`;
+}
+
 function cover(issue, ctx) {
   const c = issue.cover || {};
   const src = mediaUrl(issue, c.photo, ctx);
   const place = String(c.place || '').trim() || 'Somewhere';
-  const longest = Math.max(4, ...place.split(/\s+/).map(w => [...w].length));
-  const words = place.split(/\s+/).length;
   const coords = fmtCoords(c.lat, c.lon);
   return `<section class="cover wrap" aria-label="Cover">
 <div class="cover-card${src ? '' : ' no-photo'}">
 ${src ? `<img class="cover-photo" src="${esc(src)}" alt="${esc(c.alt || '')}"${c.w && c.h ? ` width="${c.w}" height="${c.h}"` : ''} fetchpriority="high" decoding="async">` : ''}
-<h1 class="cover-h"><span class="cover-greet">${esc(c.greeting || 'Greetings from')}</span> <span class="cover-word" style="--n:${longest};--lines:${Math.min(words, 3)}"><span class="cw cw-shadow" aria-hidden="true">${esc(place)}</span><span class="cw cw-face"${src ? ` style="background-image:${esc(cssUrl(src))}"` : ''}>${esc(place)}</span></span></h1>
+<h1 class="cover-h"><span class="cover-greet">${esc(c.greeting || 'Greetings from')}</span> <span class="cover-word" style="font-size:${coverFontSize(place)}"><span class="cw cw-shadow" aria-hidden="true">${esc(place)}</span><span class="cw cw-face"${src ? ` style="background-image:${esc(cssUrl(src))}"` : ''}>${esc(place)}</span></span></h1>
 <p class="cover-loc">${coords ? `<span>${coords}</span>` : ''}${c.country ? `<span>${esc(c.country)}</span>` : ''}<span>No. ${pad2(issue.number)}</span></p>
 </div>
 <div class="franking" aria-hidden="true">${stamp(issue, ctx, 'franking-stamp')}${postmark(issue)}</div>
