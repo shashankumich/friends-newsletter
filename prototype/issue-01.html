@@ -1,0 +1,819 @@
+<title>Postcards from Shashank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Courier+Prime:wght@400;700&family=Kalam:wght@400;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
+<style>
+/* Layout: one airmail letter. A 680px reading column carries the writing; postcard objects (cover, camera roll, map) break out to 1040px. */
+:root{
+  --paper:#E6ECF0;      /* airmail onion-skin */
+  --sheet:#F8FAFB;      /* letter sheet, cards */
+  --ink:#172238;        /* fountain-pen navy */
+  --ink-soft:#526079;
+  --rule:#C2CEDA;
+  --red:#C2352C;        /* airmail red */
+  --blue:#23469A;       /* airmail blue, handwriting ink */
+  --gold:#E3A23A;       /* stamp marigold */
+  --object:#FFFFFF;     /* physical things: polaroids, stamps */
+  --object-ink:#1B2333;
+  --good:#17643F; --good-bg:#D6EFE1;
+  --warn:#7A4E00; --warn-bg:#FAE7C4;
+  --off:#536077;  --off-bg:#DDE3EA;
+  --note-a:#FFF2B3; --note-b:#FFD9CF; --note-c:#D3EDDD;
+  --shadow:0 1px 2px rgb(23 34 56 / .14), 0 10px 26px -10px rgb(23 34 56 / .32);
+  --f-display:"Alfa Slab One","Rockwell","Roboto Slab",Georgia,serif;
+  --f-body:"Literata","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --f-hand:"Kalam","Segoe Print","Bradley Hand",cursive;
+  --f-mono:"Courier Prime","Courier New",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D1420; --sheet:#152034; --ink:#E5EBF2; --ink-soft:#9AA8BC; --rule:#2B3A52;
+    --red:#EE6156; --blue:#8FADF4; --gold:#F0B958; --object:#ECE9E1; --object-ink:#1B2333;
+    --good:#86DBAB; --good-bg:#15372A; --warn:#F5C46B; --warn-bg:#3A2C10; --off:#9AA8BC; --off-bg:#1F2B3F;
+    --note-a:#EDE2A6; --note-b:#EBCBC2; --note-c:#C4DCCD;
+    --shadow:0 1px 2px rgb(0 0 0 / .45), 0 12px 28px -10px rgb(0 0 0 / .7);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D1420; --sheet:#152034; --ink:#E5EBF2; --ink-soft:#9AA8BC; --rule:#2B3A52;
+  --red:#EE6156; --blue:#8FADF4; --gold:#F0B958; --object:#ECE9E1; --object-ink:#1B2333;
+  --good:#86DBAB; --good-bg:#15372A; --warn:#F5C46B; --warn-bg:#3A2C10; --off:#9AA8BC; --off-bg:#1F2B3F;
+  --note-a:#EDE2A6; --note-b:#EBCBC2; --note-c:#C4DCCD;
+  --shadow:0 1px 2px rgb(0 0 0 / .45), 0 12px 28px -10px rgb(0 0 0 / .7);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.airmail{height:12px;background:repeating-linear-gradient(-45deg,var(--red) 0 14px,var(--paper) 14px 22px,var(--blue) 22px 36px,var(--paper) 36px 44px)}
+.wrap{padding-inline:16px;padding-block:0 80px}
+.col{max-width:680px;margin-inline:auto}
+.wide{max-width:1040px;margin-inline:auto}
+.sec{margin-top:80px}
+h2{font-family:var(--f-body);font-weight:600;font-size:clamp(24px,4.6vw,30px);line-height:1.2;margin:8px 0 16px;text-wrap:balance}
+.label{font-family:var(--f-mono);font-weight:700;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);margin:0;display:flex;align-items:center;gap:12px}
+.label::after{content:"";flex:1;height:1px;background:var(--rule)}
+p{margin:0 0 14px}
+.muted{color:var(--ink-soft)}
+.mono-note{font-family:var(--f-mono);font-size:13px;color:var(--ink-soft);letter-spacing:.04em}
+button{font:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+
+/* prototype bar */
+.proto{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px;padding-block:10px;font-family:var(--f-mono);font-size:13px;color:var(--ink-soft);border-bottom:1px dashed var(--rule)}
+.proto strong{color:var(--red);letter-spacing:.12em}
+.proto label{display:flex;align-items:center;gap:8px}
+.proto select{font:inherit;color:var(--ink);background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:4px 8px}
+
+/* masthead + franking */
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding-top:22px}
+.mast{display:flex;flex-direction:column;gap:2px;min-width:0}
+.wordmark{font-family:var(--f-display);font-size:clamp(17px,3.2vw,22px);line-height:1.15;margin:0}
+.wordmark span{color:var(--red)}
+.issue-no{font-family:var(--f-mono);font-size:14px;color:var(--ink-soft);margin:0}
+.franking{position:relative;flex:none;width:clamp(150px,30vw,260px);height:clamp(96px,15vw,140px)}
+.franking .stamp{position:absolute;right:0;top:0;width:clamp(68px,10.5vw,100px);transform:rotate(4deg)}
+.postmark{position:absolute;right:clamp(30px,5.2vw,52px);top:clamp(30px,4.6vw,46px);width:clamp(150px,26vw,236px);color:var(--ink);opacity:.72;transform:rotate(-8deg);transform-origin:80% 50%;animation:stampin .7s cubic-bezier(.2,.9,.3,1.25) .3s both;pointer-events:none}
+@keyframes stampin{0%{transform:scale(1.35) rotate(-20deg)}100%{transform:scale(1) rotate(-8deg)}}
+
+/* perforated stamp */
+.stamp{--r:4px;display:block;padding:calc(2.3*var(--r));
+  background:radial-gradient(var(--r),#0000 97%,var(--object)) round calc(-1.5*var(--r)) calc(-1.5*var(--r))/calc(3*var(--r)) calc(3*var(--r)),
+             linear-gradient(var(--object) 0 0) no-repeat 50%/calc(100% - 3*var(--r)) calc(100% - 3*var(--r));
+  filter:drop-shadow(0 2px 3px rgb(23 34 56 / .28))}
+.stamp svg{display:block;width:100%;height:auto}
+
+/* cover: large-letter postcard */
+.hero{text-align:center;padding-block:28px 4px}
+.hero h1{margin:0;font-weight:400;line-height:1}
+.greet{display:block;font-family:var(--f-hand);font-weight:700;color:var(--red);font-size:clamp(30px,7vw,58px);line-height:1;transform:rotate(-5deg);text-align:left;padding-left:5%;margin-bottom:-.04em;position:relative;z-index:2}
+.bw{display:inline-grid;font-family:var(--f-display);font-size:clamp(58px,18.5vw,196px);line-height:.95;text-transform:uppercase;letter-spacing:.01em;max-width:100%}
+.bw>span{grid-area:1/1}
+.bw-shadow{color:var(--ink);transform:translate(.035em,.045em)}
+.bw-face{color:var(--red);position:relative}
+.bw.filled .bw-face{color:transparent;background-image:var(--scene);background-size:cover;background-position:50% 62%;-webkit-background-clip:text;background-clip:text;-webkit-text-stroke:.022em var(--object)}
+.hero-meta{font-family:var(--f-mono);font-size:14px;color:var(--ink-soft);margin:26px 0 0;letter-spacing:.04em;text-wrap:balance}
+
+/* letter */
+.letter{background:var(--sheet);box-shadow:var(--shadow);border-radius:3px;padding:clamp(22px,5vw,44px)}
+.dear,.sign{font-family:var(--f-hand);color:var(--blue);line-height:1.2}
+.dear{font-size:clamp(26px,5vw,32px);margin-bottom:16px}
+.sign{font-size:26px;margin:20px 0 0}
+.letter p:not(.dear):not(.sign){max-width:62ch}
+
+/* lately */
+.lately{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px 28px}
+.lately li{border-top:2px solid var(--ink);padding-top:12px;min-width:0}
+.tag{font-family:var(--f-mono);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--red)}
+.lately h3{font-size:19px;line-height:1.25;margin:6px 0 6px;font-weight:600}
+.lately p{font-size:16px;color:var(--ink-soft);margin:0}
+
+/* the moment: video postcard */
+.frame{background:var(--object);color:var(--object-ink);padding:10px 10px 0;box-shadow:var(--shadow);border-radius:2px;transform:rotate(-.6deg)}
+.video{position:relative;aspect-ratio:16/9;max-width:100%;overflow:hidden;background:#1E2A44}
+.video svg{display:block;width:100%;height:100%}
+.play{position:absolute;left:50%;top:50%;width:72px;height:72px;margin:-36px 0 0 -36px;border-radius:50%;border:0;background:rgb(255 255 255 / .92);color:#172238;display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 20px rgb(0 0 0 / .3);transition:opacity .25s,transform .25s}
+.play:hover{transform:scale(1.06)}
+.play .i-pause{display:none}
+.video.playing .play{opacity:0}
+.video.playing:hover .play,.video.playing .play:focus-visible{opacity:.9}
+.video.playing .play .i-play{display:none}
+.video.playing .play .i-pause{display:block}
+.dur{position:absolute;right:10px;bottom:14px;font-family:var(--f-mono);font-size:12px;background:rgb(10 14 24 / .7);color:#FFFFFF;padding:2px 8px;border-radius:999px}
+.vtag{position:absolute;left:10px;top:10px;font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;background:rgb(10 14 24 / .7);color:#FFFFFF;padding:2px 8px;border-radius:999px}
+.progress{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgb(255 255 255 / .25)}
+.progress i{display:block;height:100%;width:0;background:#FFFFFF}
+.video.playing .progress i{animation:prog 24s linear forwards}
+.video.paused .progress i,.video.paused .tram-move{animation-play-state:paused}
+@keyframes prog{to{width:100%}}
+.tram-move{transform:translateX(150px)}
+.video.playing .tram-move{animation:ride 24s linear forwards}
+@keyframes ride{0%{transform:translateX(150px)}55%{transform:translateX(520px)}55.01%{transform:translateX(-130px)}100%{transform:translateX(150px)}}
+.tape{font-family:var(--f-hand);font-size:22px;line-height:1.2;margin:0;padding:12px 4px 16px}
+.story{margin-top:22px}
+
+/* camera roll */
+.roll{display:flex;gap:22px;overflow-x:auto;scroll-snap-type:x mandatory;padding:18px 8px 28px;scrollbar-width:thin}
+.polaroid{flex:none;width:clamp(176px,44vw,228px);background:var(--object);color:var(--object-ink);padding:10px 10px 0;border:0;box-shadow:var(--shadow);scroll-snap-align:center;cursor:zoom-in;text-align:left;transform:rotate(var(--tilt,0deg));transition:transform .25s}
+.polaroid:hover{transform:rotate(0deg) translateY(-4px)}
+.polaroid img{display:block;width:100%;aspect-ratio:1;object-fit:cover;max-width:100%}
+.polaroid span{display:block;font-family:var(--f-hand);font-size:18px;line-height:1.25;padding:10px 2px 14px;min-height:64px}
+
+/* currently: customs form */
+.customs{background:var(--sheet);border:2px solid var(--ink);font-family:var(--f-mono);font-size:13px}
+.customs-head{display:flex;justify-content:space-between;align-items:baseline;gap:4px 12px;flex-wrap:wrap;padding:10px 14px;border-bottom:2px solid var(--ink)}
+.customs-head b{font-size:16px;letter-spacing:.1em}
+.customs dl{margin:0}
+.crow{display:grid;grid-template-columns:150px minmax(0,1fr);border-bottom:1px solid var(--ink)}
+.crow dt{padding:12px 14px;border-right:1px solid var(--ink);text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--ink-soft)}
+.crow dd{margin:0;padding:8px 14px 10px;font-family:var(--f-hand);font-size:21px;color:var(--blue);line-height:1.3}
+.crow dd small{display:block;font-family:var(--f-mono);font-size:12px;color:var(--ink-soft);letter-spacing:.04em}
+.customs-foot{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;padding:12px 14px}
+.box{display:inline-flex;align-items:center;gap:8px}
+.box i{width:17px;height:17px;border:1.5px solid var(--ink);display:inline-grid;place-items:center;font-style:normal;font-family:var(--f-hand);font-weight:700;color:var(--blue);font-size:20px;line-height:1}
+.customs-sign{margin-left:auto;display:flex;align-items:baseline;gap:8px}
+.customs-sign span{font-family:var(--f-hand);font-size:22px;color:var(--blue);line-height:1}
+
+/* next stop: boarding pass */
+.pass{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,34%);background:var(--sheet);border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+.pass-main{padding:20px 22px 22px;min-width:0}
+.pass-top{display:flex;justify-content:space-between;gap:12px;font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.route{display:flex;align-items:center;gap:14px;margin:12px 0 16px}
+.code{font-family:var(--f-display);font-size:clamp(40px,9vw,58px);line-height:1}
+.code small{display:block;font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;color:var(--ink-soft);margin-top:6px}
+.code.to{color:var(--red)}
+.flight{flex:1;min-width:30px;height:2px;background:repeating-linear-gradient(90deg,var(--ink-soft) 0 6px,transparent 6px 12px);position:relative;top:-10px}
+.flight svg{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;color:var(--ink);background:var(--sheet)}
+.fields{margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:12px 18px;font-family:var(--f-mono)}
+.fields dt{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.fields dd{margin:0;font-weight:700;font-size:15px}
+.pass-stub{position:relative;padding:20px;border-left:2px dashed var(--rule);display:flex;flex-direction:column;gap:12px;min-width:0}
+.pass-stub::before,.pass-stub::after{content:"";position:absolute;width:24px;height:24px;border-radius:50%;background:var(--paper);left:-13px}
+.pass-stub::before{top:-12px}
+.pass-stub::after{bottom:-12px}
+.around{font-family:var(--f-hand);font-size:22px;line-height:1.25;margin:0}
+.barcode{height:40px;margin-top:auto;background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 4px,var(--ink) 4px 7px,transparent 7px 9px,var(--ink) 9px 10px,transparent 10px 14px,var(--ink) 14px 17px,transparent 17px 18px)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font-family:var(--f-mono);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:10px 16px;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.btn:hover{background:var(--paper)}
+.btn-primary{background:var(--red);border-color:var(--red);color:var(--sheet)}
+.btn-primary:hover{background:var(--red);filter:brightness(1.08)}
+.btn[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+.status{font-family:var(--f-mono);font-size:13px;color:var(--ink-soft);margin:0;min-height:1.4em}
+
+/* mailbag */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:22px;margin-top:6px}
+.note{margin:0;background:var(--note-a);color:var(--object-ink);padding:18px 18px 14px;box-shadow:var(--shadow);transform:rotate(var(--tilt,0deg));font-family:var(--f-hand);font-size:19px;line-height:1.35}
+.note p{margin:0}
+.note footer{font-family:var(--f-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-top:12px;opacity:.75}
+
+/* who's awake */
+.mapcard{background:var(--sheet);border-radius:6px;box-shadow:var(--shadow);padding:clamp(12px,3vw,26px)}
+.map{display:block;width:100%;height:auto}
+.map .land circle{fill:var(--rule)}
+.map .arc{fill:none;stroke:var(--blue);stroke-width:.6;stroke-dasharray:1.6 1.8;opacity:.6}
+.map .pin-dot{stroke:var(--ink);stroke-width:.7}
+.map .pin.awake .pin-dot{fill:var(--gold)}
+.map .pin.asleep .pin-dot{fill:var(--sheet)}
+.map .pin.you .pin-dot{fill:var(--red);stroke:var(--red)}
+.map .here .pin-dot{fill:var(--blue);stroke:var(--blue)}
+.map text{font-family:var(--f-mono);font-size:5.4px;fill:var(--ink);paint-order:stroke;stroke:var(--sheet);stroke-width:1.8px;stroke-linejoin:round;display:none}
+@media (min-width:640px){.map text{display:block}}
+.pulse{fill:none;stroke:var(--gold);stroke-width:.9;animation:pulse 2.4s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{from{transform:scale(.7);opacity:.9}to{transform:scale(2.8);opacity:0}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--f-mono);font-size:12px;color:var(--ink-soft);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--ink);display:inline-block}
+.legend .l-awake{background:var(--gold)}
+.legend .l-asleep{background:var(--sheet)}
+.legend .l-here{background:var(--blue);border-color:var(--blue)}
+.clocks{list-style:none;padding:0;margin:18px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 28px}
+.clocks li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 0;border-top:1px solid var(--rule)}
+.who{font-weight:600;line-height:1.3}
+.who small{display:block;font-family:var(--f-mono);font-size:12px;color:var(--ink-soft);font-weight:400;letter-spacing:.06em}
+.you-tag{font-family:var(--f-mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-left:6px}
+.time{font-family:var(--f-mono);font-size:20px;font-variant-numeric:tabular-nums;text-align:right;line-height:1.2}
+.time small{display:block;font-size:12px;color:var(--ink-soft)}
+.chip{grid-column:1/-1;justify-self:start;font-family:var(--f-mono);font-size:12px;padding:2px 10px;border-radius:999px}
+.chip.good{background:var(--good-bg);color:var(--good)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.off{background:var(--off-bg);color:var(--off)}
+
+/* your turn: back of a postcard */
+.pcard{position:relative;background:var(--sheet);box-shadow:var(--shadow);display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
+  border:9px solid transparent;border-image:repeating-linear-gradient(-45deg,var(--red) 0 10px,var(--sheet) 10px 16px,var(--blue) 16px 26px,var(--sheet) 26px 32px) 9}
+.pc-left{padding:22px 24px 24px;border-right:1px solid var(--rule);min-width:0}
+.pc-right{padding:22px 24px 24px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.q{font-family:var(--f-hand);font-weight:700;font-size:clamp(24px,4.4vw,30px);line-height:1.2;display:block;color:var(--ink);text-wrap:balance}
+.hint{font-size:15px;color:var(--ink-soft);margin:6px 0 10px}
+.pcard textarea{display:block;width:100%;min-height:138px;resize:vertical;border:0;background-color:transparent;font-family:var(--f-hand);font-size:21px;line-height:34px;color:var(--blue);padding:0 2px;background-image:repeating-linear-gradient(transparent 0 33px,var(--rule) 33px 34px);background-attachment:local}
+.pcard textarea::placeholder{color:var(--ink-soft);opacity:.7}
+.pcard textarea:focus-visible{outline:2px dashed var(--blue);outline-offset:4px}
+.rstamps{border:0;padding:0;margin:16px 0 0;display:flex;flex-wrap:wrap;gap:10px}
+.rstamps legend{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);padding:0;margin-bottom:8px}
+.rstamp{font-family:var(--f-mono);font-weight:700;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);background:transparent;border:2px solid currentColor;box-shadow:inset 0 0 0 2px var(--sheet),inset 0 0 0 3px currentColor;padding:9px 13px;border-radius:6px;transform:rotate(var(--tilt,0deg));cursor:pointer;opacity:.78;transition:opacity .2s}
+.rstamp:hover{opacity:1}
+.rstamp[aria-pressed="true"]{color:var(--red);opacity:1;animation:ink .32s ease-out}
+@keyframes ink{0%{transform:rotate(var(--tilt,0deg)) scale(1.28)}100%{transform:rotate(var(--tilt,0deg)) scale(1)}}
+.stampbox{align-self:flex-end;width:88px}
+.address{margin:0;display:grid;gap:10px}
+.address div{border-bottom:1px solid var(--rule);display:flex;gap:10px;align-items:baseline;padding-bottom:4px;min-width:0}
+.address dt{font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);width:44px;flex:none}
+.address dd{margin:0;font-family:var(--f-hand);font-size:21px;color:var(--blue);line-height:1.3;min-width:0}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--ink-soft);line-height:1.45}
+.consent input{margin-top:3px;accent-color:var(--red);width:16px;height:16px;flex:none}
+.cancel{position:absolute;right:6%;top:16%;width:min(240px,60%);color:var(--red);opacity:.85;transform:rotate(-12deg);pointer-events:none;animation:stampin2 .45s cubic-bezier(.2,.9,.3,1.25) both}
+@keyframes stampin2{0%{transform:scale(1.5) rotate(-24deg)}100%{transform:scale(1) rotate(-12deg)}}
+
+/* stamp album + footer */
+.album{list-style:none;padding:0;margin:4px 0 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;max-width:520px}
+.album li{display:flex;flex-direction:column;align-items:center;gap:8px;font-family:var(--f-mono);font-size:12px;line-height:1.3;text-align:center;color:var(--ink-soft)}
+.album .stamp{width:100%}
+.slot{width:100%;aspect-ratio:100/124;border:2px dashed var(--rule);border-radius:3px;display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;color:var(--ink-soft)}
+.fine{margin-top:40px;padding-top:18px;border-top:1px solid var(--rule);font-size:15px;color:var(--ink-soft)}
+.fine p{margin:0 0 6px}
+
+/* lightbox */
+.lightbox{position:fixed;inset:0;z-index:50;background:rgb(8 12 20 / .82);display:grid;place-items:center;padding:24px 16px}
+.lightbox figure{margin:0;background:var(--object);color:var(--object-ink);padding:12px 12px 0;max-width:min(560px,100%);box-shadow:0 20px 50px rgb(0 0 0 / .5)}
+.lightbox img{display:block;width:100%;max-height:70vh;object-fit:contain}
+.lightbox figcaption{font-family:var(--f-hand);font-size:22px;padding:12px 4px 16px}
+.lb-close{position:absolute;top:16px;right:16px;font-family:var(--f-mono);font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;background:#FFFFFF;color:#172238;border:0;border-radius:999px;padding:9px 16px;cursor:pointer}
+
+/* narrow screens */
+@media (max-width:640px){
+  .pcard{grid-template-columns:minmax(0,1fr)}
+  .pc-left{border-right:0;border-bottom:1px solid var(--rule)}
+  .stampbox{align-self:flex-start;width:76px}
+}
+@media (max-width:600px){
+  .pass{grid-template-columns:minmax(0,1fr)}
+  .pass-stub{border-left:0;border-top:2px dashed var(--rule)}
+  .pass-stub::before,.pass-stub::after{top:-13px;bottom:auto}
+  .pass-stub::before{left:-12px}
+  .pass-stub::after{left:auto;right:-12px}
+  .barcode{margin-top:4px}
+}
+@media (max-width:520px){
+  .crow{grid-template-columns:minmax(0,1fr)}
+  .crow dt{border-right:0;padding-bottom:0}
+  .customs-sign{margin-left:0}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+<div class="airmail" aria-hidden="true"></div>
+<div class="wrap">
+
+  <div class="proto wide">
+    <span><strong>PROTOTYPE</strong> &nbsp;Sample content. Shows every section; a real issue uses five or six.</span>
+    <label for="preview-as">Preview as
+      <select id="preview-as">
+        <option value="Priya">Priya (Bengaluru)</option>
+        <option value="Aiko">Aiko (Tokyo)</option>
+        <option value="Marcus">Marcus (New York)</option>
+        <option value="">A friend, no name</option>
+      </select>
+    </label>
+  </div>
+
+  <header class="top wide">
+    <div class="mast">
+      <p class="wordmark">Postcards <span>from</span> Shashank</p>
+      <p class="issue-no">No. 01 · Autumn 2026</p>
+    </div>
+    <div class="franking" aria-hidden="true">
+      <span class="stamp" data-stamp></span>
+      <svg class="postmark" viewBox="0 0 236 112">
+        <defs><path id="pm-arc" d="M178 56 m-41 0 a41 41 0 1 1 82 0 a41 41 0 1 1 -82 0"/></defs>
+        <g fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="178" cy="56" r="52"/><circle cx="178" cy="56" r="33"/>
+          <path d="M4 26 q12 -9 24 0 t24 0 t24 0 t24 0 t24 0"/>
+          <path d="M4 44 q12 -9 24 0 t24 0 t24 0 t24 0 t24 0"/>
+          <path d="M4 62 q12 -9 24 0 t24 0 t24 0 t24 0 t24 0"/>
+          <path d="M4 80 q12 -9 24 0 t24 0 t24 0 t24 0 t24 0"/>
+        </g>
+        <g fill="currentColor" font-family="Courier Prime, Courier New, monospace" font-weight="700">
+          <text font-size="10" letter-spacing="1.6"><textPath href="#pm-arc">LISBOA · PORTUGAL · LISBOA · PORTUGAL ·</textPath></text>
+          <text x="178" y="54" font-size="13" text-anchor="middle">09 OCT</text>
+          <text x="178" y="70" font-size="13" text-anchor="middle">2026</text>
+        </g>
+      </svg>
+    </div>
+  </header>
+
+  <section class="hero wide" aria-label="Cover">
+    <h1><span class="greet">Greetings from</span> <span class="bw" id="bigword"><span class="bw-shadow" aria-hidden="true">Lisbon</span><span class="bw-face">Lisbon</span></span></h1>
+    <p class="hero-meta">A three-minute letter to 24 friends in 11 countries</p>
+  </section>
+
+  <main>
+    <section class="sec col" aria-label="Letter">
+      <div class="letter">
+        <p class="dear" id="dear">Dear Priya,</p>
+        <p>It's been a full season. Work swallowed most of the summer, so in September I took ten days off and went to Lisbon. I mostly walked uphill and ate custard tarts.</p>
+        <p>This is the first of these postcards. Every season I'll send one: what I've been up to, a few photos, and one question for you at the bottom. Please answer it. That's the part I'm most excited about.</p>
+        <p class="sign">Love,<br>Shashank</p>
+      </div>
+    </section>
+
+    <section class="sec col" aria-labelledby="h-lately">
+      <p class="label">Lately</p>
+      <h2 id="h-lately">Three things since we last talked</h2>
+      <ul class="lately">
+        <li><span class="tag">Work</span><h3>Launched the big project</h3><p>Eight months of work went live in September. I slept through most of the weekend after.</p></li>
+        <li><span class="tag">Home</span><h3>Finally nailed Mom's dal</h3><p>Three video calls and four attempts. Attempt four was worth it.</p></li>
+        <li><span class="tag">Body</span><h3>Ran my first 10K</h3><p>58:12. I'm told mentioning the medal is mandatory.</p></li>
+      </ul>
+    </section>
+
+    <section class="sec col" aria-labelledby="h-moment">
+      <p class="label">The moment</p>
+      <h2 id="h-moment">Tram 28, golden hour</h2>
+      <figure class="frame" style="margin:0">
+        <div class="video" id="video">
+          <div id="video-scene"></div>
+          <span class="vtag">VIDEO</span>
+          <button class="play" id="play" type="button" aria-label="Play video">
+            <svg class="i-play" width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>
+            <svg class="i-pause" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor"/></svg>
+          </button>
+          <span class="dur">0:24</span>
+          <div class="progress" aria-hidden="true"><i></i></div>
+        </div>
+        <figcaption class="tape">Graça, 7:48 pm</figcaption>
+      </figure>
+      <p class="story">I rode it three times in one evening to catch this light on the climb up to Graça. By the third lap the driver was waving at me.</p>
+    </section>
+
+    <section class="sec wide" aria-labelledby="h-roll">
+      <div class="col">
+        <p class="label">Camera roll</p>
+        <h2 id="h-roll">Ten days in Lisbon, five photos</h2>
+        <p class="mono-note">Tap a photo to see it bigger. Swipe for more.</p>
+      </div>
+      <div class="roll" id="roll"></div>
+    </section>
+
+    <section class="sec col" aria-labelledby="h-currently">
+      <p class="label">Currently</p>
+      <h2 id="h-currently">Contents of this season</h2>
+      <div class="customs">
+        <div class="customs-head"><b>CUSTOMS DECLARATION</b><span>CN 22 · May be opened by friends</span></div>
+        <dl>
+          <div class="crow"><dt>Reading</dt><dd>Tomorrow, and Tomorrow, and Tomorrow<small>Halfway through, loving it</small></dd></div>
+          <div class="crow"><dt>Listening</dt><dd>Fado on Sunday mornings<small>Blame Lisbon</small></dd></div>
+          <div class="crow"><dt>Cooking</dt><dd>Dal, attempt no. 5<small>Even better than no. 4</small></dd></div>
+          <div class="crow"><dt>Obsessed with</dt><dd>Ranking custard tarts in every city<small>Lisbon leads, obviously</small></dd></div>
+        </dl>
+        <div class="customs-foot">
+          <span class="box"><i>✕</i>Gift</span>
+          <span class="box"><i></i>Documents</span>
+          <span class="box"><i></i>Commercial sample</span>
+          <span class="customs-sign">Sender <span>Shashank</span></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec col" aria-labelledby="h-next">
+      <p class="label">Next stop</p>
+      <h2 id="h-next">Tokyo, in November</h2>
+      <div class="pass">
+        <div class="pass-main">
+          <div class="pass-top"><span>Boarding pass</span><span>Seat: next to you</span></div>
+          <div class="route">
+            <div class="code">HOME<small>Wherever I am</small></div>
+            <div class="flight" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V8.5l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z" fill="currentColor"/></svg></div>
+            <div class="code to">TYO<small>Tokyo, Japan</small></div>
+          </div>
+          <dl class="fields">
+            <div><dt>Passenger</dt><dd>Shashank</dd></div>
+            <div><dt>Dates</dt><dd>12–20 Nov</dd></div>
+            <div><dt>Gate</dt><dd>Ramen</dd></div>
+          </dl>
+        </div>
+        <div class="pass-stub">
+          <p class="around" id="around">Anywhere near Tokyo then? Tell me.</p>
+          <div class="btns">
+            <button class="btn btn-primary" type="button" id="btn-around" aria-pressed="false">I'm around</button>
+            <button class="btn" type="button" id="btn-not" aria-pressed="false">Not this time</button>
+          </div>
+          <p class="status" id="around-status" role="status"></p>
+          <div class="barcode" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec col" aria-labelledby="h-mail">
+      <p class="label">Mailbag</p>
+      <h2 id="h-mail">What you said last time</h2>
+      <p class="muted">From No. 02 on, answers to the last question land here, only if you say it's OK. These are samples for the question “What's the best thing you ate this summer?”</p>
+      <div class="notes">
+        <blockquote class="note" style="--tilt:-1.6deg"><p>A peach from a roadside stand in Yamanashi. I'm still thinking about it.</p><footer>Aiko · Tokyo</footer></blockquote>
+        <blockquote class="note" style="--tilt:1.2deg;background:var(--note-b)"><p>My grandma's jollof at the family reunion. Nothing else comes close.</p><footer>Amara · Lagos</footer></blockquote>
+        <blockquote class="note" style="--tilt:-.8deg;background:var(--note-c)"><p>Cold cherry soup by a lake. Don't knock it until you try it.</p><footer>Lena · Berlin</footer></blockquote>
+      </div>
+    </section>
+
+    <section class="sec wide" aria-labelledby="h-awake">
+      <div class="col">
+        <p class="label">Who's awake</p>
+        <h2 id="h-awake">Where everyone is right now</h2>
+        <p class="muted">Live local time for a few of you. Green means it's a decent hour to call.</p>
+      </div>
+      <div class="mapcard">
+        <svg class="map" id="map" viewBox="0 0 360 136" role="img" aria-label="Dot map of the world with a pin for each friend"></svg>
+        <div class="legend"><span><i class="l-here"></i>This postcard came from here</span><span><i class="l-awake"></i>Awake</span><span><i class="l-asleep"></i>Probably asleep</span></div>
+        <ul class="clocks" id="clocks"></ul>
+      </div>
+    </section>
+
+    <section class="sec col" aria-labelledby="h-turn">
+      <p class="label">Your turn</p>
+      <h2 id="h-turn" class="muted" style="font-size:18px;font-weight:400;margin-bottom:18px">Write back on the back of this postcard</h2>
+      <form class="pcard" id="reply" novalidate>
+        <div class="pc-left">
+          <label class="q" for="reply-text">What's one small thing that made your season?</label>
+          <p class="hint">One sentence is plenty. Replies go only to me.</p>
+          <textarea id="reply-text" name="reply" rows="4" placeholder="Write here…"></textarea>
+          <fieldset class="rstamps">
+            <legend>Or just stamp it</legend>
+            <button type="button" class="rstamp" aria-pressed="false" style="--tilt:-3deg">Miss you</button>
+            <button type="button" class="rstamp" aria-pressed="false" style="--tilt:2deg">Call me</button>
+            <button type="button" class="rstamp" aria-pressed="false" style="--tilt:-1deg">Loved it</button>
+            <button type="button" class="rstamp" aria-pressed="false" style="--tilt:3deg">Visit soon</button>
+          </fieldset>
+        </div>
+        <div class="pc-right">
+          <span class="stamp stampbox" data-stamp aria-hidden="true"></span>
+          <dl class="address">
+            <div><dt>To</dt><dd>Shashank</dd></div>
+            <div><dt>From</dt><dd id="from-name">Priya, Bengaluru</dd></div>
+          </dl>
+          <label class="consent" for="quote-ok"><input type="checkbox" id="quote-ok" checked>You can quote me in the next Mailbag</label>
+          <button class="btn btn-primary" type="submit">Send postcard</button>
+        </div>
+        <svg class="cancel" id="cancel" viewBox="0 0 240 110" aria-hidden="true" hidden>
+          <g fill="none" stroke="currentColor" stroke-width="3"><rect x="4" y="18" width="232" height="74" rx="10"/><rect x="11" y="25" width="218" height="60" rx="6" stroke-width="1.5"/></g>
+          <g fill="currentColor" font-family="Courier Prime, Courier New, monospace" font-weight="700" text-anchor="middle">
+            <text x="120" y="58" font-size="26" letter-spacing="4">PREVIEW</text>
+            <text x="120" y="77" font-size="12" letter-spacing="3">NOTHING WAS SENT</text>
+          </g>
+        </svg>
+      </form>
+      <p class="status" id="reply-status" role="status" style="margin-top:12px"></p>
+    </section>
+
+    <section class="sec col" aria-labelledby="h-album">
+      <p class="label">The stamp album</p>
+      <h2 id="h-album">One stamp per issue</h2>
+      <p class="muted">Every season adds a stamp. Give it a few years and this becomes a whole album of us.</p>
+      <ol class="album">
+        <li><span class="stamp" data-stamp aria-hidden="true"></span>No. 01<br>Autumn 2026</li>
+        <li><span class="slot">02</span>Winter</li>
+        <li><span class="slot">03</span>Spring</li>
+        <li><span class="slot">04</span>Summer</li>
+      </ol>
+      <div class="fine">
+        <p>Sent to 24 friends in 11 countries. Replies go to me and nobody else.</p>
+        <p>If you'd rather not get these, just tell me. No hard feelings.</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo" hidden>
+  <figure><img id="lb-img" alt=""><figcaption id="lb-cap"></figcaption></figure>
+  <button class="lb-close" id="lb-close" type="button">Close</button>
+</div>
+
+<script>
+(() => {
+  /* ---------- helpers ---------- */
+  const $ = s => document.querySelector(s);
+  const f = n => Math.round(n * 10) / 10;
+  const rnd = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const uri = svg => 'data:image/svg+xml,' + encodeURIComponent(svg);
+  const wrapSvg = (w, h, body) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice">${body}</svg>`;
+
+  /* ---------- illustrated placeholder "photos" ---------- */
+  const WALLS = ['#F6E7CF', '#EDBB73', '#F3A58D', '#A9CDE0', '#FBF3E4', '#E89466', '#F1D08A', '#C9DDB8'];
+  const ROOFS = ['#B5472F', '#A63F2A', '#C65A3A'];
+
+  function houses(r, base, w, minH, maxH, k) {
+    let x = -8, out = '';
+    while (x < w) {
+      const hw = (16 + r() * 18) * k, hh = minH + r() * (maxH - minH), b = base(x + hw / 2), y = b - hh;
+      out += `<rect x="${f(x)}" y="${f(y)}" width="${f(hw + .6)}" height="${f(hh + 60 * k)}" fill="${WALLS[(r() * WALLS.length) | 0]}"/>`;
+      const rh = hw * (.22 + r() * .18);
+      out += `<path d="M${f(x - 1.5 * k)} ${f(y)}L${f(x + hw / 2)} ${f(y - rh)}L${f(x + hw + 1.5 * k)} ${f(y)}Z" fill="${ROOFS[(r() * ROOFS.length) | 0]}"/>`;
+      for (let wy = y + 6 * k; wy < b - 8 * k; wy += 10 * k)
+        for (let wx = x + 4 * k; wx < x + hw - 7 * k; wx += 7.5 * k) {
+          const l = r();
+          if (l > .3) out += `<rect x="${f(wx)}" y="${f(wy)}" width="${f(3 * k)}" height="${f(4.5 * k)}" fill="${l > .86 ? '#FFD98A' : '#3A3346'}" opacity="${l > .86 ? 1 : .5}"/>`;
+        }
+      x += hw;
+    }
+    return out;
+  }
+
+  const TRAM = `<path d="M50 8 L40 -5 L57 -14" fill="none" stroke="#2E3A55" stroke-width="2.5"/>
+    <rect x="4" y="2" width="92" height="9" rx="3" fill="#D9961C"/>
+    <rect x="0" y="8" width="100" height="44" rx="7" fill="#F2B631"/>
+    <rect x="5" y="14" width="90" height="17" rx="2" fill="#2E3A55"/>
+    <g stroke="#F2B631" stroke-width="3"><line x1="27" y1="14" x2="27" y2="31"/><line x1="50" y1="14" x2="50" y2="31"/><line x1="73" y1="14" x2="73" y2="31"/></g>
+    <rect x="0" y="38" width="100" height="5" fill="#F4EFE2"/>
+    <circle cx="22" cy="55" r="6" fill="#2E3A55"/><circle cx="78" cy="55" r="6" fill="#2E3A55"/>`;
+
+  function dusk({ w = 480, h = 270, seed = 7, id = 'd', street = false } = {}) {
+    const r = rnd(seed), k = h / 270, hz = h * (street ? .8 : .76);
+    const back = x => hz - h * .13 - Math.sin((x / w) * Math.PI * 1.2 + .3) * h * .11;
+    let hill = `M0 ${f(back(0))}`;
+    for (let x = 10; x <= w; x += 10) hill += `L${x} ${f(back(x))}`;
+    let s = `<defs><linearGradient id="${id}s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7D88B"/><stop offset=".55" stop-color="#F0985C"/><stop offset="1" stop-color="#DA5D4B"/></linearGradient>
+      <linearGradient id="${id}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3667B1"/><stop offset="1" stop-color="#172F60"/></linearGradient></defs>
+      <rect width="${w}" height="${h}" fill="url(#${id}s)"/>
+      <circle cx="${f(w * .72)}" cy="${f(h * .36)}" r="${f(h * .13)}" fill="#FFF1C6"/>
+      <path d="${hill}L${w} ${h}L0 ${h}Z" fill="#B9564C"/>
+      <g opacity=".72">${houses(r, back, w, h * .06, h * .12, k * .7)}</g>
+      ${houses(r, () => hz, w, h * .1, h * .21, k)}`;
+    if (street) {
+      s += `<rect y="${f(hz)}" width="${w}" height="${f(h - hz)}" fill="#5B4A57"/>
+        <g stroke="#CDB9A5" stroke-width="2"><line x1="0" x2="${w}" y1="${f(hz + h * .1)}" y2="${f(hz + h * .1)}"/><line x1="0" x2="${w}" y1="${f(hz + h * .14)}" y2="${f(hz + h * .14)}"/></g>
+        <g class="tram-move"><g transform="translate(0 ${f(hz + h * .12 - 61)})">${TRAM}</g></g>`;
+    } else {
+      s += `<rect y="${f(hz)}" width="${w}" height="${f(h - hz)}" fill="url(#${id}w)"/>
+        <g stroke="#FFE3A0" stroke-width="${f(3 * k)}" stroke-linecap="round" opacity=".85">
+          <line x1="${f(w * .64)}" x2="${f(w * .8)}" y1="${f(hz + h * .05)}" y2="${f(hz + h * .05)}"/>
+          <line x1="${f(w * .67)}" x2="${f(w * .77)}" y1="${f(hz + h * .1)}" y2="${f(hz + h * .1)}"/>
+          <line x1="${f(w * .69)}" x2="${f(w * .75)}" y1="${f(hz + h * .15)}" y2="${f(hz + h * .15)}"/></g>`;
+    }
+    return wrapSvg(w, h, s);
+  }
+
+  function nata() {
+    const r = rnd(11);
+    const tart = (cx, cy, R) => {
+      let t = `<circle cx="${cx}" cy="${cy}" r="${R}" fill="#C98236"/>`;
+      for (let i = 0; i < 20; i++) { const a = i / 20 * Math.PI * 2; t += `<circle cx="${f(cx + Math.cos(a) * R * .9)}" cy="${f(cy + Math.sin(a) * R * .9)}" r="${f(R * .14)}" fill="#DDA052"/>`; }
+      t += `<circle cx="${cx}" cy="${cy}" r="${f(R * .76)}" fill="url(#cu)"/>`;
+      for (let i = 0; i < 16; i++) { const a = r() * Math.PI * 2, d = r() * R * .6; t += `<circle cx="${f(cx + Math.cos(a) * d)}" cy="${f(cy + Math.sin(a) * d)}" r="${f(R * (.04 + r() * .1))}" fill="#6B3518" opacity="${f(.3 + r() * .55)}"/>`; }
+      return t + `<ellipse cx="${f(cx - R * .25)}" cy="${f(cy - R * .3)}" rx="${f(R * .22)}" ry="${f(R * .1)}" fill="#FFFFFF" opacity=".28"/>`;
+    };
+    let dust = '';
+    for (let i = 0; i < 40; i++) { const a = r() * Math.PI * 2, d = 40 + r() * 110; dust += `<circle cx="${f(196 + Math.cos(a) * d)}" cy="${f(204 + Math.sin(a) * d)}" r="1.3" fill="#7A4320" opacity=".45"/>`; }
+    return wrapSvg(400, 400, `<defs><pattern id="tl" width="50" height="50" patternUnits="userSpaceOnUse"><rect width="50" height="50" fill="#1F4E9E"/><circle cx="25" cy="25" r="9" fill="none" stroke="#E9EEF7" stroke-width="2"/><path d="M0 0Q25 12 50 0M0 50Q25 38 50 50M0 0Q12 25 0 50M50 0Q38 25 50 50" fill="none" stroke="#E9EEF7" stroke-width="1.6" opacity=".8"/></pattern>
+      <radialGradient id="cu" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#F8D46A"/><stop offset="1" stop-color="#E5A83A"/></radialGradient></defs>
+      <rect width="400" height="400" fill="url(#tl)"/>
+      <circle cx="204" cy="214" r="168" fill="#000000" opacity=".2"/>
+      <circle cx="196" cy="204" r="168" fill="#F4F0E7"/><circle cx="196" cy="204" r="130" fill="none" stroke="#E2DACB" stroke-width="3"/>
+      ${dust}${tart(165, 180, 88)}${tart(266, 270, 62)}`);
+  }
+
+  function azulejo() {
+    return wrapSvg(400, 400, `<defs><pattern id="az" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="#F3EFE4"/>
+      <path d="M50 4L96 50L50 96L4 50Z" fill="none" stroke="#1D4C9C" stroke-width="1.5" opacity=".55"/>
+      <g fill="#1D4C9C"><ellipse cx="50" cy="26" rx="8" ry="17"/><ellipse cx="50" cy="74" rx="8" ry="17"/><ellipse cx="26" cy="50" rx="17" ry="8"/><ellipse cx="74" cy="50" rx="17" ry="8"/><circle cx="50" cy="50" r="13"/></g>
+      <circle cx="50" cy="50" r="5.5" fill="#F3EFE4"/>
+      <g fill="none" stroke="#1D4C9C" stroke-width="4"><circle cx="0" cy="0" r="19"/><circle cx="100" cy="0" r="19"/><circle cx="0" cy="100" r="19"/><circle cx="100" cy="100" r="19"/></g>
+      <g fill="#E3A23A"><circle cx="0" cy="0" r="6"/><circle cx="100" cy="0" r="6"/><circle cx="0" cy="100" r="6"/><circle cx="100" cy="100" r="6"/></g>
+      <rect width="100" height="100" fill="none" stroke="#CFC6B4" stroke-width="2.5"/></pattern></defs>
+      <rect width="400" height="400" fill="url(#az)"/>
+      <rect x="201" y="101" width="98" height="98" fill="#C8B28C"/>
+      <path d="M214 120l14 8 9-5 16 12 11-3 22 14" fill="none" stroke="#A8916B" stroke-width="2"/>`);
+  }
+
+  function sea() {
+    let waves = '';
+    const r = rnd(4);
+    for (let i = 0; i < 16; i++) { const x = r() * 380, y = 180 + r() * 105; waves += `<path d="M${f(x)} ${f(y)}q8 -5 16 0" fill="none" stroke="#FFFFFF" stroke-width="2" opacity=".5"/>`; }
+    return wrapSvg(400, 400, `<defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#BBDAF1"/><stop offset="1" stop-color="#F4E6CF"/></linearGradient>
+      <linearGradient id="sw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2F79B9"/><stop offset="1" stop-color="#1B4F8A"/></linearGradient></defs>
+      <rect width="400" height="170" fill="url(#sk)"/>
+      <circle cx="318" cy="58" r="22" fill="#FFF6DC"/>
+      <path d="M0 158Q50 132 120 146T200 156V172H0Z" fill="#8AA39A"/>
+      <rect y="168" width="400" height="140" fill="url(#sw)"/>${waves}
+      <path d="M236 166L276 166L270 175L242 175Z" fill="#F4F0E6"/><line x1="256" y1="110" x2="256" y2="166" stroke="#3A3346" stroke-width="2"/>
+      <path d="M258 112L258 162L288 162Z" fill="#FFFFFF"/><path d="M254 120L254 162L234 162Z" fill="#F2D8B5"/>
+      <path d="M0 300Q50 288 100 300T200 298T300 303T400 296V400H0Z" fill="#EBD3A1"/>
+      <path d="M0 300Q50 288 100 300T200 298T300 303T400 296" fill="none" stroke="#FFFFFF" stroke-width="6" opacity=".85"/>
+      <line x1="92" y1="318" x2="104" y2="384" stroke="#6B4A3A" stroke-width="3"/>
+      <path d="M44 330A50 30 0 0 1 144 312Z" fill="#C2352C"/><path d="M70 324A28 26 0 0 1 96 316L94 322Z" fill="#FFFFFF"/><path d="M110 315A30 26 0 0 1 128 312L124 318Z" fill="#FFFFFF"/>`);
+  }
+
+  function roofs() {
+    const r = rnd(21);
+    let rows = '';
+    for (let row = 0, y = 168; y < 420; row++, y += 40 + row * 3) {
+      let x = -30 - r() * 30;
+      const k = 1 + row * .12;
+      while (x < 420) {
+        const w = (48 + r() * 40) * k;
+        rows += `<rect x="${f(x)}" y="${f(y + 18 * k)}" width="${f(w)}" height="${f(70 * k)}" fill="${WALLS[(r() * WALLS.length) | 0]}"/>`;
+        rows += `<path d="M${f(x - 3)} ${f(y + 22 * k)}L${f(x + w * .25)} ${f(y)}L${f(x + w * .75)} ${f(y)}L${f(x + w + 3)} ${f(y + 22 * k)}Z" fill="${ROOFS[(r() * ROOFS.length) | 0]}"/>`;
+        if (r() > .55) rows += `<rect x="${f(x + w * .62)}" y="${f(y - 9 * k)}" width="${f(6 * k)}" height="${f(12 * k)}" fill="#8E3A26"/>`;
+        for (let i = 1; i < 4; i++) rows += `<line x1="${f(x + w * (.25 + .5 * i / 4))}" y1="${f(y)}" x2="${f(x + w * i / 4)}" y2="${f(y + 22 * k)}" stroke="#8E3A26" stroke-width="1" opacity=".35"/>`;
+        x += w - 4;
+      }
+    }
+    return wrapSvg(400, 400, `<defs><linearGradient id="rk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F8E6C8"/><stop offset="1" stop-color="#F1C49B"/></linearGradient></defs>
+      <rect width="400" height="400" fill="url(#rk)"/>
+      <rect x="252" y="96" width="96" height="100" fill="#F4EEE2"/><path d="M262 98A38 38 0 0 1 338 98Z" fill="#EAE2D2"/>
+      <rect x="294" y="44" width="12" height="18" fill="#EAE2D2"/><line x1="300" y1="30" x2="300" y2="46" stroke="#B9AE98" stroke-width="2"/><line x1="294" y1="36" x2="306" y2="36" stroke="#B9AE98" stroke-width="2"/>
+      <rect x="236" y="120" width="18" height="76" fill="#EDE5D6"/><rect x="346" y="120" width="18" height="76" fill="#EDE5D6"/>
+      ${rows}`);
+  }
+
+  const STAMP = `<svg viewBox="0 0 100 124"><rect width="100" height="124" fill="#9CC6E4"/><circle cx="74" cy="32" r="12" fill="#F7D277"/>
+    <path d="M0 96L100 60V124H0Z" fill="#5C8F6E"/><g transform="translate(7.5 60.3) rotate(-19.8) scale(.5)">${TRAM}</g>
+    <text x="7" y="17" font-family="Courier Prime, Courier New, monospace" font-weight="700" font-size="11" fill="#172238">No. 01</text>
+    <text x="93" y="116" text-anchor="end" font-family="Alfa Slab One, Georgia, serif" font-size="11" fill="#FFFFFF">AUTUMN</text></svg>`;
+  document.querySelectorAll('[data-stamp]').forEach(el => { el.innerHTML = STAMP; });
+
+  /* ---------- cover word ---------- */
+  const bw = $('#bigword');
+  bw.style.setProperty('--scene', `url("${uri(dusk({ w: 640, h: 300, seed: 5 }))}")`);
+  bw.classList.add('filled');
+
+  /* ---------- the moment (simulated video) ---------- */
+  $('#video-scene').innerHTML = dusk({ w: 480, h: 270, seed: 9, id: 'v', street: true });
+  const video = $('#video'), play = $('#play');
+  play.addEventListener('click', () => {
+    if (!video.classList.contains('playing')) { video.classList.add('playing'); video.classList.remove('paused'); play.setAttribute('aria-label', 'Pause video'); }
+    else { const p = video.classList.toggle('paused'); play.setAttribute('aria-label', p ? 'Play video' : 'Pause video'); }
+  });
+  video.querySelector('.progress i').addEventListener('animationend', () => {
+    video.classList.remove('playing', 'paused'); play.setAttribute('aria-label', 'Play video');
+  });
+
+  /* ---------- camera roll + lightbox ---------- */
+  const PHOTOS = [
+    { svg: dusk({ w: 400, h: 400, seed: 3, id: 'p' }), cap: 'Miradouro at dusk', tilt: -2 },
+    { svg: nata(), cap: 'Pastel de nata no. 14 (I kept count)', tilt: 1.5 },
+    { svg: azulejo(), cap: 'Every wall here is a tile wall', tilt: -1 },
+    { svg: sea(), cap: 'Cascais, 30 minutes by train', tilt: 2 },
+    { svg: roofs(), cap: 'Alfama rooftops from the castle', tilt: -1.5 },
+  ];
+  const roll = $('#roll'), lb = $('#lightbox');
+  let lastFocus = null;
+  PHOTOS.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'polaroid'; b.style.setProperty('--tilt', p.tilt + 'deg');
+    b.setAttribute('aria-label', `Open photo: ${p.cap}`);
+    b.innerHTML = `<img src="${uri(p.svg)}" alt=""><span>${p.cap}</span>`;
+    b.addEventListener('click', () => {
+      lastFocus = b;
+      $('#lb-img').src = uri(p.svg); $('#lb-img').alt = p.cap; $('#lb-cap').textContent = p.cap;
+      lb.hidden = false; $('#lb-close').focus();
+    });
+    roll.appendChild(b);
+  });
+  const closeLb = () => { lb.hidden = true; if (lastFocus) lastFocus.focus(); };
+  $('#lb-close').addEventListener('click', closeLb);
+  lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !lb.hidden) closeLb(); });
+
+  /* ---------- who's awake ---------- */
+  const MAP = { cols: 180, rows: 68, latTop: 80, b64: 'AAAAAGC4D////wAAHwAAAAA8AAAAAAAAAADAAOTD////AQAEAAAAAGAAAAAAAAAAAAAc9QPg//8AAAAAwADg/wOAGwAAAAAAcBHtDcD/fwAAAAAwAPz/fwMAAAABGACQP8w/AP9fAADAACC4////9z8BCAD/339OuvEA/x8AAPgPALf//////78PB///////4YP/AQAA/n/9v////////w+M/////7/4AT+ABwCf1///////////DwD/////H8ACHgAAwOf///////////8PgL////8HeAAcAADg5///////////9AAAHuD//wd4AgAAAODH/////////0EEAAAIgP//H/AHAACAQeP///////9/AA8AAAEA/v//+R8AAMBB8P///////z8ABwAAAAD+///5PwAAYPP//////////wMBAAAAAPz///8/AAAA+///////////AgAAAAAA6P///2IAAAD+//////////8CAAAAAADw////gwAAAP7/////////fwIAAAAAAPD///8GAAAA/v7p8/////8/AAAAAAAA8P//fwAAAOCP+cDz/////x8DAAAAAADw//8/AAAAwEP2/uf/////BwEAAAAAAPD//w8AAADgA7T/5////x8CAQAAAAAA4P//DwAAAIDhAv/n////f8YAAAAAAADA//8PAAAAgH9A9P////8/8gAAAAAAAID//wMAAADA/wDw/////z8YAAAAAAAAAP//AQAAAOD/9/7/////fwAAAAAAAAAA/AMCAAAA4P////v///9/AAAAAAAAAAD6AQIAAAD4///35////z8AAAAAAAAAAPQBAAAAAPj//+cv+P//PwAAAAAAAAAA4AEDAAAA/P//7//g//9PAAAAAAAAAADgYQgAAAD+///ff+A//wAAAAAAAAAAAMAzQAAAAPz//59/wA9+AQAAAAAAAAAAAD8AAAAA/P//nx+AB/5AAAAAAAAAAAAA8AAAAAD+//+/B4AD+EAAAAAAAAAAAADAAAAAAPz//38BgAP4QQAAAAAAAAAAAIDwAAAA/P///wwAA8gAAQAAAAAAAAAAAPUPAAD4////BwAFSAAAAAAAAAAAAAAA+B8AAPD///8HAAQAAAEAAAAAAAAAAAD4/wAAYOH//wMAADQYAAAAAAAAAAAAAPj/AQAAgP//AQAAKBwAAAAAAAAAAAAA/P8BAACA//8AAAAYXgAAAAAAAAAAAAD8/wcAAMD/fwAAADAeGAAAAAAAAAAAAPz/PwAAgP8/AAAAYG7UAQAAAAAAAAAA/v//AAAA/z8AAABAgIAHAAAAAAAAAAD8//8BAAD/PwAAAIADgA8BAAAAAAAAAPj//wAAAP8/AAAAABABCwQAAAAAAAAA+P9/AAAA/j8AAAAAAAAAAAAAAAAAAADw/38AAAD/PwQAAAAAOAIAAAAAAAAAAPD/fwAAAP8/BAAAAAA/BiAAAAAAAAAAwP8/AAAA/x8HAAAAgH8GAAAAAAAAAACA/z8AAAD/DwcAAACA/wcAAAAAAAAAAID/PwAAAP4PAwAAAPD/HxAAAAAAAAAAgP8PAAAA/g8DAAAA+P8fAAAAAAAAAACA/wMAAAD+BwEAAAD4/z8AAAAAAAAAAID/AwAAAPwDAAAAAPj/fwAAAAAAAAAAwP8BAAAA/AMAAAAA+P9/AAAAAAAAAADA/wEAAAD4AQAAAADw/38AAAAAAAAAAMD/AAAAAPgAAAAAAPDgPwAAAAAAAAAAwB8AAAAAAAAAAAAAEIAfAAEAAAAAAADgPwAAAAAAAAAAAAAAAB8AAgAAAAAAAOAHAAAAAAAAAAAAAAAAAAAGAAAAAAAA4AUAAAAAAAAAAAAAAAAMAAMAAAAAAADAAwAAAAAAAAAAAAAAAAiAAQAAAAAAAOABAAAAAAAAAAAAAAAAAMAAAAAAAAAA4AEAAAAAAAAAAAAAAAAAAAAAAAAAAADwAAAAAAAAAAAQAAAAAAAAAAAAAAAAAHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAAAAAAAAAAAAAAAA==' };
+  const FRIENDS = [
+    { name: 'Aiko', city: 'Tokyo', tz: 'Asia/Tokyo', lat: 35.68, lon: 139.69 },
+    { name: 'Priya', city: 'Bengaluru', tz: 'Asia/Kolkata', lat: 12.97, lon: 77.59 },
+    { name: 'Lena', city: 'Berlin', tz: 'Europe/Berlin', lat: 52.52, lon: 13.4 },
+    { name: 'Amara', city: 'Lagos', tz: 'Africa/Lagos', lat: 6.52, lon: 3.38 },
+    { name: 'Marcus', city: 'New York', tz: 'America/New_York', lat: 40.71, lon: -74.01, lab: 'above' },
+    { name: 'Tomás', city: 'Buenos Aires', tz: 'America/Argentina/Buenos_Aires', lat: -34.6, lon: -58.38 },
+    { name: 'Ji-woo', city: 'San Francisco', tz: 'America/Los_Angeles', lat: 37.77, lon: -122.42, lab: 'below' },
+    { name: 'Sam', city: 'Sydney', tz: 'Australia/Sydney', lat: -33.87, lon: 151.21 },
+  ];
+  const HERE = { city: 'Lisbon', lat: 38.72, lon: -9.14 };
+  const px = lon => lon + 180, py = lat => MAP.latTop - lat;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const mapEl = $('#map');
+  (function drawLand() {
+    const bin = atob(MAP.b64), nb = Math.ceil(MAP.cols / 8);
+    let dots = '';
+    for (let r = 0; r < MAP.rows; r++)
+      for (let c = 0; c < MAP.cols; c++)
+        if ((bin.charCodeAt(r * nb + (c >> 3)) >> (c & 7)) & 1) dots += `<circle cx="${c * 2 + 1}" cy="${r * 2 + 1}" r=".62"/>`;
+    let arcs = '';
+    const hx = px(HERE.lon), hy = py(HERE.lat);
+    FRIENDS.forEach(fr => {
+      const x = px(fr.lon), y = py(fr.lat), d = Math.hypot(x - hx, y - hy);
+      arcs += `<path class="arc" d="M${f(hx)} ${f(hy)}Q${f((hx + x) / 2)} ${f((hy + y) / 2 - d * .28)} ${f(x)} ${f(y)}"/>`;
+    });
+    mapEl.innerHTML = `<g class="land">${dots}</g>${arcs}<g id="pins"></g>
+      <g class="here" transform="translate(${f(hx)} ${f(hy)})"><circle class="pin-dot" r="2.6"/><text x="-4" y="-4" text-anchor="end">${HERE.city}</text></g>`;
+  })();
+
+  const pinsEl = mapEl.querySelector('#pins'), clocksEl = $('#clocks');
+  const LABEL = { right: [4.5, 2, 'start'], left: [-4.5, 2, 'end'], above: [0, -4.5, 'middle'], below: [0, 8.5, 'middle'] };
+  const pinRefs = FRIENDS.map(fr => {
+    const g = document.createElementNS(NS, 'g');
+    const x = px(fr.lon), y = py(fr.lat);
+    const [lx, ly, anchor] = LABEL[fr.lab || (x > 300 ? 'left' : 'right')];
+    g.setAttribute('class', 'pin');
+    g.setAttribute('transform', `translate(${f(x)} ${f(y)})`);
+    g.innerHTML = `<circle class="pulse" r="2.6"/><circle class="pin-dot" r="2.6"/><text x="${lx}" y="${ly}" text-anchor="${anchor}"></text>`;
+    pinsEl.appendChild(g);
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="who"><span class="nm"></span><small>${fr.city}</small></span><span class="time"><span class="t"></span><small class="d"></small></span><span class="chip"></span>`;
+    li.querySelector('.nm').textContent = fr.name;
+    clocksEl.appendChild(li);
+    return { fr, g, li };
+  });
+
+  const hourIn = (tz, now) => {
+    const h = parseInt(new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', hourCycle: 'h23' }).format(now), 10);
+    return h % 24;
+  };
+  const statusFor = h =>
+    h >= 9 && h < 22 ? ['good', 'Good time to call'] :
+    h >= 7 && h < 9 ? ['warn', 'Just waking up'] :
+    h >= 22 && h < 24 ? ['warn', 'Winding down'] : ['off', 'Probably asleep'];
+
+  let currentFriend = 'Priya';
+  function tick() {
+    const now = new Date();
+    pinRefs.forEach(({ fr, g, li }) => {
+      const h = hourIn(fr.tz, now);
+      const t = new Intl.DateTimeFormat('en-US', { timeZone: fr.tz, hour: 'numeric', minute: '2-digit' }).format(now);
+      const d = new Intl.DateTimeFormat('en-US', { timeZone: fr.tz, weekday: 'short' }).format(now);
+      const [cls, label] = statusFor(h);
+      const awake = h >= 7 && h < 23, you = fr.name === currentFriend;
+      g.setAttribute('class', `pin ${awake ? 'awake' : 'asleep'}${you ? ' you' : ''}`);
+      g.querySelector('.pulse').style.display = cls === 'good' ? '' : 'none';
+      g.querySelector('text').textContent = `${you ? 'You' : fr.name} · ${t}`;
+      li.querySelector('.t').textContent = t;
+      li.querySelector('.d').textContent = d;
+      const chip = li.querySelector('.chip'); chip.className = `chip ${cls}`; chip.textContent = label;
+      const nm = li.querySelector('.nm');
+      nm.innerHTML = ''; nm.textContent = fr.name;
+      if (you) { const s = document.createElement('span'); s.className = 'you-tag'; s.textContent = 'You'; nm.appendChild(s); }
+    });
+  }
+  tick();
+  setInterval(tick, 30000);
+
+  /* ---------- personalisation ---------- */
+  const PEOPLE = { Priya: 'Bengaluru', Aiko: 'Tokyo', Marcus: 'New York' };
+  function personalise(name) {
+    currentFriend = name;
+    $('#dear').textContent = name ? `Dear ${name},` : 'Dear friend,';
+    $('#from-name').textContent = name ? `${name}, ${PEOPLE[name]}` : 'You';
+    $('#around').textContent = name === 'Aiko' ? "Aiko, you're in Tokyo! First bowl of ramen is on me." : 'Anywhere near Tokyo then? Tell me.';
+    tick();
+  }
+  $('#preview-as').addEventListener('change', e => personalise(e.target.value));
+
+  /* ---------- next stop ---------- */
+  const aroundBtn = $('#btn-around'), notBtn = $('#btn-not'), aroundStatus = $('#around-status');
+  aroundBtn.addEventListener('click', () => {
+    aroundBtn.setAttribute('aria-pressed', 'true'); notBtn.setAttribute('aria-pressed', 'false');
+    aroundStatus.textContent = 'Prototype: in the real version, Shashank gets a heads-up before the trip.';
+  });
+  notBtn.addEventListener('click', () => {
+    notBtn.setAttribute('aria-pressed', 'true'); aroundBtn.setAttribute('aria-pressed', 'false');
+    aroundStatus.textContent = 'No worries. Next time.';
+  });
+
+  /* ---------- your turn ---------- */
+  document.querySelectorAll('.rstamp').forEach(b => b.addEventListener('click', () => {
+    b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+  }));
+  $('#reply').addEventListener('submit', e => {
+    e.preventDefault();
+    const text = $('#reply-text').value.trim();
+    const stamped = [...document.querySelectorAll('.rstamp[aria-pressed="true"]')].map(b => b.textContent);
+    const status = $('#reply-status');
+    if (!text && !stamped.length) { status.textContent = 'Write a line or tap a stamp first.'; $('#reply-text').focus(); return; }
+    const cancel = $('#cancel'); cancel.hidden = true; void cancel.getBoundingClientRect(); cancel.hidden = false;
+    status.textContent = 'This is a prototype, so nothing was sent. In the real version your postcard lands in Shashank\'s inbox' +
+      ($('#quote-ok').checked && text ? ', and your answer may appear in the next Mailbag.' : '.');
+  });
+})();
+</script>

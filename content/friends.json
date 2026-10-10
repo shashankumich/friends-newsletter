@@ -1,0 +1,10 @@
+[
+  { "name": "Aiko", "city": "Tokyo", "country": "Japan", "tz": "Asia/Tokyo", "lat": 35.68, "lon": 139.69 },
+  { "name": "Priya", "city": "Bengaluru", "country": "India", "tz": "Asia/Kolkata", "lat": 12.97, "lon": 77.59 },
+  { "name": "Lena", "city": "Berlin", "country": "Germany", "tz": "Europe/Berlin", "lat": 52.52, "lon": 13.4 },
+  { "name": "Amara", "city": "Lagos", "country": "Nigeria", "tz": "Africa/Lagos", "lat": 6.52, "lon": 3.38 },
+  { "name": "Marcus", "city": "New York", "country": "United States", "tz": "America/New_York", "lat": 40.71, "lon": -74.01 },
+  { "name": "Tomás", "city": "Buenos Aires", "country": "Argentina", "tz": "America/Argentina/Buenos_Aires", "lat": -34.6, "lon": -58.38 },
+  { "name": "Ji-woo", "city": "San Francisco", "country": "United States", "tz": "America/Los_Angeles", "lat": 37.77, "lon": -122.42 },
+  { "name": "Sam", "city": "Sydney", "country": "Australia", "tz": "Australia/Sydney", "lat": -33.87, "lon": 151.21 }
+]
