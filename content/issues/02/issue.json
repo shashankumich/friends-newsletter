@@ -1,0 +1,124 @@
+{
+  "number": 2,
+  "status": "draft",
+  "season": "Winter 2026",
+  "date": "2026-08-15",
+  "color": "#E9A515",
+  "opening": {
+    "on": false,
+    "quote": "",
+    "source": "",
+    "note": ""
+  },
+  "cover": {
+    "greeting": "Greetings from",
+    "place": "New York City",
+    "country": "United States",
+    "lat": 40.71,
+    "lon": -74.01,
+    "photo": "",
+    "w": 0,
+    "h": 0,
+    "alt": "",
+    "dek": "New York in August."
+  },
+  "letter": {
+    "greeting": "Dear",
+    "body": "[How things have been since the last postcard, in a sentence or two.]\n\nThis one comes from New York, where I spent [how long] in August. [A line or two about the trip: what you did, what surprised you, what you'll remember.]",
+    "signoff": "Love,"
+  },
+  "lately": {
+    "on": true,
+    "title": "Three things since we last talked",
+    "items": [
+      {
+        "tag": "Work",
+        "title": "[A headline]",
+        "text": "[A line or two]"
+      },
+      {
+        "tag": "Home",
+        "title": "[A headline]",
+        "text": "[A line or two]"
+      },
+      {
+        "tag": "Life",
+        "title": "[A headline]",
+        "text": "[A line or two]"
+      }
+    ]
+  },
+  "moment": {
+    "on": true,
+    "kind": "photo",
+    "title": "[The moment from New York]",
+    "video": "",
+    "poster": "",
+    "duration": 0,
+    "youtube": "",
+    "photo": "",
+    "w": 0,
+    "h": 0,
+    "caption": "[Where, and what time]",
+    "story": "[The story behind it, in two or three sentences]"
+  },
+  "roll": {
+    "on": true,
+    "title": "New York in August",
+    "photos": []
+  },
+  "currently": {
+    "on": false,
+    "title": "Contents of this season",
+    "items": [
+      {
+        "label": "Reading",
+        "value": "",
+        "note": ""
+      },
+      {
+        "label": "Listening",
+        "value": "",
+        "note": ""
+      },
+      {
+        "label": "Cooking",
+        "value": "",
+        "note": ""
+      },
+      {
+        "label": "Obsessed with",
+        "value": "",
+        "note": ""
+      }
+    ]
+  },
+  "nextStop": {
+    "on": false,
+    "place": "",
+    "country": "",
+    "code": "",
+    "dates": "",
+    "gate": "",
+    "line": ""
+  },
+  "mailbag": {
+    "on": true,
+    "title": "What you said last time",
+    "question": "Who's someone you've been meaning to catch up with?",
+    "notes": []
+  },
+  "awake": {
+    "on": true
+  },
+  "yourTurn": {
+    "question": "[One easy question for friends]",
+    "stamps": [
+      "Miss you",
+      "Call me",
+      "Loved it",
+      "Visit soon"
+    ]
+  },
+  "groups": {}
+}

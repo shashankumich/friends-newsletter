@@ -2,8 +2,8 @@
   "number": 1,
   "status": "draft",
   "season": "Autumn 2026",
-  "date": "2026-08-15",
-  "color": "#E9A515",
+  "date": "2026-10-14",
+  "color": "#0D7F8A",
   "opening": {
     "on": true,
     "quote": "That's how it goes, kids. The friends, neighbors, drinking buddies, and partners in crime you love so much when you're young, as the years go by, you just lose touch. You will be shocked, kids, when you discover how easy it is in life to part ways with people forever. That's why, when you find someone you want to keep around, *you do something about it.*",
@@ -12,19 +12,19 @@
   },
   "cover": {
     "greeting": "Greetings from",
-    "place": "New York City",
+    "place": "Hawaii",
     "country": "United States",
-    "lat": 40.71,
-    "lon": -74.01,
+    "lat": 20.8,
+    "lon": -156.33,
     "photo": "",
     "w": 0,
     "h": 0,
     "alt": "",
-    "dek": "New York in August, and the reason these postcards exist."
+    "dek": "Hawaii, and the reason these postcards exist."
   },
   "letter": {
     "greeting": "Dear",
-    "body": "A while ago that line from *How I Met Your Mother* came back to me, and it wouldn't leave. So many of the people I love are now a flight, a time zone or a few busy years away, and I don't want to be the one who lets us drift.\n\nSo this is the first of these postcards. Every season I'll send one: what I've been up to, a few photos, and one question for you at the bottom. Please answer it. That's the part I'm most excited about.\n\nThis one comes from New York, where I spent [how long] in August. [A line or two about the trip: what you did, what surprised you, what you'll remember.]",
+    "body": "A while ago that line from *How I Met Your Mother* came back to me, and it wouldn't leave. So many of the people I love are now a flight, a time zone or a few busy years away, and I don't want to be the one who lets us drift.\n\nSo this is the first of these postcards. Every season I'll send one: what I've been up to, a few photos, and one question for you at the bottom. Please answer it. That's the part I'm most excited about.\n\nThis one comes from Hawaii, where I spent [how long] in [which month]. [A line or two about the trip: what you did, what surprised you, what you'll remember.]",
     "signoff": "Love,"
   },
   "lately": {
@@ -51,7 +51,7 @@
   "moment": {
     "on": true,
     "kind": "photo",
-    "title": "[The moment from New York]",
+    "title": "[The moment from Hawaii]",
     "video": "",
     "poster": "",
     "duration": 0,
@@ -64,7 +64,7 @@
   },
   "roll": {
     "on": true,
-    "title": "New York in August",
+    "title": "[N] days in Hawaii",
     "photos": []
   },
   "currently": {
@@ -95,7 +95,7 @@
   },
   "nextStop": {
     "on": false,
-    "place": "Arcadia",
+    "place": "",
     "country": "",
     "code": "",
     "dates": "",
