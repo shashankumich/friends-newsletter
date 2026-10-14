@@ -1,0 +1,124 @@
+{
+  "number": 3,
+  "status": "draft",
+  "season": "Spring 2027",
+  "date": "2026-10-14",
+  "color": "#1E6B4C",
+  "opening": {
+    "on": false,
+    "quote": "",
+    "source": "",
+    "note": ""
+  },
+  "cover": {
+    "greeting": "Greetings from",
+    "place": "New England",
+    "country": "United States",
+    "lat": 44.35,
+    "lon": -68.21,
+    "photo": "",
+    "w": 0,
+    "h": 0,
+    "alt": "",
+    "dek": "Boston to Acadia National Park, [how many] days and [how many] lobster rolls."
+  },
+  "letter": {
+    "greeting": "Dear",
+    "body": "[How things have been since the last postcard, in a sentence or two.]\n\nThis one comes from New England: [how long] between Boston and Acadia National Park in Maine. [A line or two about the trip.]",
+    "signoff": "Love,"
+  },
+  "lately": {
+    "on": true,
+    "title": "Three things since we last talked",
+    "items": [
+      {
+        "tag": "Work",
+        "title": "[A headline]",
+        "text": "[A line or two]"
+      },
+      {
+        "tag": "Home",
+        "title": "[A headline]",
+        "text": "[A line or two]"
+      },
+      {
+        "tag": "Life",
+        "title": "[A headline]",
+        "text": "[A line or two]"
+      }
+    ]
+  },
+  "moment": {
+    "on": true,
+    "kind": "photo",
+    "title": "[The moment from Acadia]",
+    "video": "",
+    "poster": "",
+    "duration": 0,
+    "youtube": "",
+    "photo": "",
+    "w": 0,
+    "h": 0,
+    "caption": "[Where, and what time]",
+    "story": "[The story behind it, in two or three sentences]"
+  },
+  "roll": {
+    "on": true,
+    "title": "Boston to Bar Harbor",
+    "photos": []
+  },
+  "currently": {
+    "on": false,
+    "title": "Contents of this season",
+    "items": [
+      {
+        "label": "Reading",
+        "value": "",
+        "note": ""
+      },
+      {
+        "label": "Listening",
+        "value": "",
+        "note": ""
+      },
+      {
+        "label": "Cooking",
+        "value": "",
+        "note": ""
+      },
+      {
+        "label": "Obsessed with",
+        "value": "",
+        "note": ""
+      }
+    ]
+  },
+  "nextStop": {
+    "on": false,
+    "place": "",
+    "country": "",
+    "code": "",
+    "dates": "",
+    "gate": "",
+    "line": ""
+  },
+  "mailbag": {
+    "on": true,
+    "title": "What you said last time",
+    "question": "[No. 02's question]",
+    "notes": []
+  },
+  "awake": {
+    "on": true
+  },
+  "yourTurn": {
+    "question": "[One easy question for friends]",
+    "stamps": [
+      "Miss you",
+      "Call me",
+      "Loved it",
+      "Visit soon"
+    ]
+  },
+  "groups": {}
+}
