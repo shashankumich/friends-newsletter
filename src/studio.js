@@ -242,15 +242,22 @@ async function open(token, { check = false } = {}) {
 
 /* ---------- unsaved work, kept locally ---------- */
 
+// Only what you actually changed is kept, each with the GitHub version it started from ("was").
+// On reload an edit goes back in only if GitHub still has that version; if it has changed since
+// (a merge, another device), the edit is set aside and you choose, so an old copy of an issue
+// never quietly writes over a newer one.
 let persistTimer;
 function persist() {
   clearTimeout(persistTimer);
   persistTimer = setTimeout(() => {
     if (!changes().length) return store.del(KEY.work());
+    const edit = (now, was) => (json(now) !== was ? { now, was } : null);
     store.set(KEY.work(), {
-      base: S.base.sha, at: Date.now(), current: S.current,
-      site: S.site, friends: S.friends, groups: S.groups, issues: [...S.issues.values()],
-      removed: [...S.removed], deleted: [...S.deleted], pending: [...S.pending.keys()],
+      v: 2, base: S.base.sha, at: Date.now(), current: S.current,
+      site: edit(S.site, S.orig.site), friends: edit(S.friends, S.orig.friends), groups: edit(S.groups, S.orig.groups),
+      issues: [...S.issues].filter(([n]) => isDirtyIssue(n)).map(([n, i]) => ({ now: i, was: S.orig.issues.get(n) ?? null })),
+      removed: [...S.removed].map(n => ({ n, was: S.orig.issues.get(n) ?? null })),
+      deleted: [...S.deleted], pending: [...S.pending.keys()],
     });
   }, 400);
 }
@@ -258,20 +265,39 @@ function persist() {
 async function restoreWork() {
   const w = store.get(KEY.work());
   if (!w) return;
-  if (w.site) S.site = w.site;
-  if (w.friends) S.friends = w.friends;
-  if (w.groups) S.groups = w.groups;
-  for (const i of w.issues || []) S.issues.set(i.number, normalize(i));
-  for (const n of w.removed || []) { S.issues.delete(n); S.removed.add(n); }
+  const edits = [];
+  const differs = (now, key) => json(now) !== S.orig[key];
+  // Autosaves from before this change kept every file, so they're only trusted if nothing changed since.
+  const v1 = w.v !== 2;
+  const add = (label, was, current, apply) => edits.push({ label, apply, ok: v1 ? w.base === S.base.sha : (was ?? null) === (current ?? null) });
+  for (const [key, label] of [['site', 'settings'], ['friends', 'friends'], ['groups', 'groups']]) {
+    const e = w[key];
+    if (!e) continue;
+    const now = v1 ? e : e.now;
+    if (differs(now, key)) add(label, v1 ? null : e.was, S.orig[key], () => { S[key] = now; });
+  }
+  for (const e of w.issues || []) {
+    const now = v1 ? e : e.now;
+    if (json(normalize(clone(now))) !== S.orig.issues.get(now.number)) {
+      add(`No. ${pad2(now.number)}`, v1 ? null : e.was, S.orig.issues.get(now.number), () => S.issues.set(now.number, normalize(now)));
+    }
+  }
+  for (const e of w.removed || []) {
+    const n = v1 ? e : e.n;
+    if (S.issues.has(n)) add(`deleting No. ${pad2(n)}`, v1 ? null : e.was, S.orig.issues.get(n), () => { S.issues.delete(n); S.removed.add(n); });
+  }
   for (const p of w.deleted || []) S.deleted.add(p);
   for (const p of w.pending || []) {
     const blob = await idb.get(p);
     if (blob) S.pending.set(p, { blob, url: URL.createObjectURL(blob) });
   }
+  const ok = edits.filter(e => e.ok);
+  const stale = edits.filter(e => !e.ok);
+  ok.forEach(e => e.apply());
   S.current = w.current || 0;
-  if (changes().length) {
-    S.restored = `Restored your unsaved changes from ${time(w.at)}.${w.base !== S.base.sha ? ' The site has changed since; saving keeps your version of the files you edited.' : ''}`;
-  } else store.del(KEY.work());
+  if (ok.length) S.restored = `Restored your unsaved changes from ${time(w.at)}.`;
+  if (stale.length) S.stale = { at: w.at, labels: stale.map(e => e.label), apply: () => stale.forEach(e => e.apply()) };
+  if (!ok.length && !stale.length) store.del(KEY.work());
 }
 
 /* ---------- what's changed ---------- */
@@ -410,7 +436,10 @@ function renderApp() {
 </div>`;
   wireApp();
   renderAll();
-  if (S.restored) banner(S.restored, [['Discard them', 'discard-work']]);
+  if (S.stale) {
+    banner(`You have unsaved edits from ${time(S.stale.at)} (${S.stale.labels.join(', ')}), but the site has changed since, so they weren't put back.`,
+      [['Use them anyway', 'apply-stale'], ['Discard them', 'discard-work']]);
+  } else if (S.restored) banner(S.restored, [['Discard them', 'discard-work']]);
 }
 
 function renderAll() {
@@ -1422,6 +1451,14 @@ const ACT = {
   'do-publish': () => publish(),
   close: () => closeDialog(),
   'banner-close': () => { $('#st-banner').hidden = true; },
+  'apply-stale': () => {
+    S.stale?.apply();
+    S.stale = null;
+    $('#st-banner').hidden = true;
+    renderAll();
+    persist();
+    toast('Your older edits are back. Check them before saving.');
+  },
   'discard-work': async () => {
     store.del(KEY.work());
     await idb.clear();
